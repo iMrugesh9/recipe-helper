@@ -48,7 +48,10 @@ def generate_static_site() -> Path:
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#080b12" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Chef AI Cookbook — Extracted Recipes</title>
   <meta name="description" content="Personal AI-extracted recipe cookbook with visual steps, ingredient checklists, and smart filters." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -56,6 +59,7 @@ def generate_static_site() -> Path:
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    img {{ max-width: 100%; height: auto; }}
     :root {{
       --bg:         #080b12;
       --surface:    #0f1420;
@@ -162,7 +166,7 @@ def generate_static_site() -> Path:
 
     /* Cards Grid */
     .recipes-grid {{
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 24px;
     }}
     .recipe-card {{
       background: var(--surface); border: 1px solid var(--border);
@@ -336,6 +340,99 @@ def generate_static_site() -> Path:
     /* Empty state */
     .empty-state {{ text-align: center; padding: 60px 20px; color: var(--text-muted); }}
     .empty-icon {{ font-size: 48px; margin-bottom: 14px; }}
+
+    /* ── Mobile & Responsive Breakpoints ────────────────────────── */
+    @media (max-width: 900px) {{
+      .page {{ padding: 32px 18px 70px; }}
+      .detail-body {{ padding: 26px 20px; }}
+    }}
+
+    @media (max-width: 680px) {{
+      .page {{ padding: 20px 14px 60px; }}
+      header {{ margin-bottom: 22px; }}
+      .logo-badge {{ font-size: 11px; padding: 5px 12px; margin-bottom: 12px; }}
+      header h1 {{ font-size: 2.1rem; margin-bottom: 10px; }}
+      header p {{ font-size: 0.95rem; line-height: 1.5; margin-bottom: 16px; }}
+      .stats-bar {{ gap: 8px; margin-bottom: 20px; }}
+      .stat-pill {{ font-size: 11px; padding: 5px 12px; }}
+
+      /* Filter Panel Mobile */
+      .filter-panel {{ padding: 16px 14px; margin-bottom: 20px; border-radius: var(--radius); }}
+      .filter-search-input {{ font-size: 14px; padding: 11px 14px 11px 38px; }}
+      .filter-search-icon {{ left: 12px; font-size: 14px; }}
+      .filter-grid {{ grid-template-columns: 1fr 1fr; gap: 8px; }}
+      .filter-select {{ font-size: 12px; padding: 8px 10px; }}
+      .btn-reset-filters {{ grid-column: 1 / -1; width: 100%; text-align: center; padding: 10px; font-size: 12px; }}
+
+      /* Recipes Grid Mobile */
+      .recipes-grid {{ grid-template-columns: 1fr; gap: 16px; }}
+      .recipe-card {{ border-radius: var(--radius); }}
+      .card-body {{ padding: 14px 14px; }}
+      .card-title {{ font-size: 1.2rem; }}
+      .card-stats {{ font-size: 11.5px; padding: 8px 10px; }}
+      .btn-view {{ min-height: 44px; font-size: 13.5px; }}
+      .btn-orig {{ min-height: 44px; padding: 10px 16px; font-size: 14px; }}
+
+      /* Detail Modal Mobile: Full Screen */
+      .detail-overlay {{
+        padding: 0;
+        background: var(--bg);
+      }}
+      .detail-container {{
+        border-radius: 0;
+        border: none;
+        min-height: 100vh;
+        box-shadow: none;
+      }}
+      .btn-close-detail {{
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        margin: 0;
+        z-index: 1200;
+        padding: 8px 14px;
+        font-size: 12px;
+        background: rgba(15,20,32,0.92);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+      }}
+      .detail-hero {{ min-height: 200px; padding: 24px 16px; }}
+      .detail-title {{ font-size: 1.65rem; }}
+      .detail-desc {{ font-size: 0.92rem; line-height: 1.5; }}
+      .detail-chips {{ gap: 6px; }}
+      .meta-chip {{ font-size: 11px; padding: 4px 10px; }}
+      .detail-body {{ padding: 18px 14px 60px; }}
+      .section-box {{ padding: 14px 12px; border-radius: var(--radius); margin-bottom: 18px; }}
+      .section-title {{ font-size: 1.15rem; }}
+
+      /* Single column ingredients for easy checklist tapping */
+      .ing-list {{ grid-template-columns: 1fr; gap: 8px; }}
+      .ing-item {{ padding: 10px 12px; min-height: 44px; }}
+      .ing-name {{ font-size: 13.5px; }}
+
+      /* Prep gallery: 2 columns on mobile */
+      .prep-gallery {{ grid-template-columns: repeat(2, 1fr); gap: 8px; }}
+      .prep-card-label {{ font-size: 10px; padding: 4px 6px; }}
+
+      /* Steps mobile */
+      .steps-list {{ gap: 16px; }}
+      .step-item {{ gap: 10px; }}
+      .step-num {{ width: 26px; height: 26px; font-size: 12px; }}
+      .step-title {{ font-size: 14.5px; }}
+      .step-instruction {{ font-size: 13px; line-height: 1.5; }}
+      .step-img-wrap {{ width: 100%; max-width: 100%; }}
+
+      /* Lightbox mobile */
+      .lightbox-modal {{ padding: 10px; }}
+      .lightbox-img {{ max-width: 95vw; max-height: 75vh; }}
+    }}
+
+    @media (max-width: 380px) {{
+      .filter-grid {{ grid-template-columns: 1fr; }}
+      .detail-title {{ font-size: 1.4rem; }}
+      .card-stats {{ grid-template-columns: 1fr; }}
+    }}
   </style>
 </head>
 <body>
@@ -415,7 +512,7 @@ def generate_static_site() -> Path:
   </div>
 
   <!-- Detailed Modal -->
-  <div class="detail-overlay" id="detailOverlay">
+  <div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this) closeDetail()">
     <button class="btn-close-detail" onclick="closeDetail()">✕ Back to Recipes</button>
     <div class="detail-container" id="detailContainer"></div>
   </div>
