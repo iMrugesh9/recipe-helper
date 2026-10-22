@@ -20,6 +20,7 @@ from datetime import datetime
 
 import cv2
 import shutil
+import socket
 
 from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
@@ -740,11 +741,25 @@ def extract():
         return jsonify({"error": f"Something went wrong: {str(e)}"}), 500
 
 
+def get_local_ip() -> str:
+    """Detect LAN IP address for mobile / local network access."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
+    local_ip = get_local_ip()
     print("\n🍽️  Recipe Helper Agent")
     print("━" * 40)
-    print(f"🌐  Open: http://localhost:{port}")
+    print(f"🌐  Local:   http://localhost:{port}")
+    print(f"📱  Mobile:  http://{local_ip}:{port}")
     print("━" * 40)
     try:
         generate_static_site()
