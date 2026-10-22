@@ -777,11 +777,11 @@ def auto_sync_github() -> dict:
         }
 
     try:
-        # Stage docs/
-        subprocess.run(["git", "add", "docs/"], check=True)
+        # Stage docs/ and canonical data
+        subprocess.run(["git", "add", "docs/", "data/recipes.json"], check=True)
 
         # Check if there are changes to commit
-        status = subprocess.run(["git", "status", "--porcelain", "docs/"], capture_output=True, text=True)
+        status = subprocess.run(["git", "status", "--porcelain", "docs/", "data/recipes.json"], capture_output=True, text=True)
         if not status.stdout.strip():
             return {
                 "exported": True,
@@ -791,7 +791,7 @@ def auto_sync_github() -> dict:
 
         # Commit
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        subprocess.run(["git", "commit", "-m", f"Auto-update recipe cookbook [{now_str}] [skip ci]"], check=True)
+        subprocess.run(["git", "commit", "-m", f"Auto-update recipe cookbook [{now_str}]"], check=True)
 
         # Check for remote origin
         remotes = subprocess.run(["git", "remote"], capture_output=True, text=True)
