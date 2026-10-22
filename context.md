@@ -10,7 +10,7 @@ Recipe Helper Agent is a full-stack, AI-powered culinary tool that extracts stru
 ```
                     LOCAL MACHINE (Private & Heavy Work)
 ┌────────────────────────────────────────────────────────────────────────┐
-│  • Flask Web Server (http://localhost:8080)                            │
+│  • Flask Web Server (http://localhost:8080 & http://<LAN_IP>:8080)     │
 │  • yt-dlp Video & Subtitle Extractor (Direct signed URL parsing)       │
 │  • OpenCV Keyframe Extraction (Laplacian variance sharpness filtering) │
 │  • Google Gemini AI Client (Private API key, multimodal video fallback)│
@@ -21,11 +21,12 @@ Recipe Helper Agent is a full-stack, AI-powered culinary tool that extracts stru
                                    ▼
                     GITHUB PAGES (Public Static Hosting)
 ┌────────────────────────────────────────────────────────────────────────┐
-│  • Free forever global CDN (https://<username>.github.io/<repo>/)      │
+│  • Free forever global CDN (https://imrugesh9.github.io/recipe-helper/)│
 │  • Standalone Static Site in docs/ (docs/index.html & docs/recipes.json)│
+│  • Fully Mobile-Responsive (touch checklist, full-screen mobile modal) │
 │  • Multi-parameter Filtering (difficulty, cook time, prep time, tools) │
 │  • Full-text Search & Sorting                                          │
-│  • Visual step images & prep gallery (embedded base64, zero external CDN│
+│  • Visual step images & prep gallery (embedded base64, zero external CDN)│
 │  • Interactive ingredient checklist & lightbox zoom                    │
 │  • Deep-linking support via URL hash (#rec_id)                         │
 └────────────────────────────────────────────────────────────────────────┘
@@ -36,22 +37,24 @@ Recipe Helper Agent is a full-stack, AI-powered culinary tool that extracts stru
 ## 3. Key Files & Structure
 
 ```
-Personal-Ai/
-├── server.py              # Flask backend, extraction engine, auto-sync worker
-├── export_static.py       # Compiles data/recipes.json into docs/ static site
+personal-ai/
+├── server.py              # Flask backend, extraction engine, auto-sync worker, LAN IP detection
+├── export_static.py       # Compiles data/recipes.json into responsive docs/ static site & auto-pushes
 ├── recipe_agent.py        # Standalone CLI interface for single URL extraction
 ├── requirements.txt       # Python dependencies (flask, yt-dlp, google-genai, opencv-python-headless, etc.)
 ├── .env                   # Secret credentials (GEMINI_API_KEY) — NEVER COMMITTED
 ├── .env.example           # Template for environment variables
-├── .gitignore             # Configured to protect secrets and ignore .venv, *.bundle, videos
+├── .gitignore             # Configured to protect secrets and ignore .venv, *.bundle, *.mp4
+├── context.md             # Living architecture & technical context documentation
+├── handoff.md             # Migration & setup guide across environments
 ├── data/
-│   └── recipes.json       # Canonical database of 6 extracted recipes with visual snapshots
-├── docs/                  # GitHub Pages root folder
-│   ├── index.html         # Standalone, interactive public cookbook
+│   └── recipes.json       # Canonical database of 7 extracted recipes with visual snapshots
+├── docs/                  # GitHub Pages root folder (branch: main, path: /docs)
+│   ├── index.html         # Standalone, interactive, mobile-responsive public cookbook
 │   └── recipes.json       # Raw static JSON feed
 ├── static/
 │   ├── index.html         # Local web app interface (Extract & Saved Recipes tabs)
-│   └── videos/            # Downloaded local MP4 video streams
+│   └── videos/            # Downloaded local MP4 video streams for local player
 └── template/
     └── recipe.html.jinja  # Jinja2 template for single static exports
 ```
@@ -81,15 +84,42 @@ Personal-Ai/
    - The user can edit the difficulty rating directly from the detail view or from the collection cards.
    - Persists immediately via `PATCH /api/recipes/<recipe_id>` to `data/recipes.json` and updates `docs/`.
 
-6. **Local Port Selection**:
-   - macOS uses port 5000 for AirPlay Receiver. Port `8080` is configured as the default port.
+6. **Local Port & LAN Mobile Access**:
+   - Port `8080` is configured as the default port.
+   - Server runs on `host="0.0.0.0"` with dynamic local IP discovery via `get_local_ip()`.
+   - On startup, the console displays both local (`http://localhost:8080`) and mobile LAN (`http://<LAN_IP>:8080`) URLs so phones on the same Wi-Fi can trigger extractions and playback directly.
+
+7. **Local Video Persistence vs. Static Web App Separation**:
+   - `.mp4` video files are intentionally git-ignored (`*.mp4`) to avoid hitting Git / GitHub Pages 1GB storage limits.
+   - The local app streams videos from `static/videos/<id>.mp4`.
+   - The public GitHub Pages site embeds high-res base64 image snapshots and deep-links to the original Reel/Short (`source_url`), keeping the public static build 100% free and lightning fast on CDN edges.
+
+8. **Automated Dual-Sync (Data + Static Site)**:
+   - `auto_sync_github()` in `export_static.py` stages both `docs/` and `data/recipes.json`.
+   - Commits and pushes directly via the configured SSH key (`git@github.com:iMrugesh9/recipe-helper.git`).
+   - Removed `[skip ci]` directive so GitHub Pages deployment actions trigger instantaneously on push.
+
+9. **Mobile-Responsive Public Cookbook (`docs/index.html`)**:
+   - Grid uses `minmax(min(100%, 320px), 1fr)` with single-column cards on mobile viewports to prevent horizontal overflow.
+   - Full-screen modal presentation on small screens with fixed floating `✕ Back` button.
+   - Single-column touch checklist with 44px tap targets for ingredient check-offs while cooking.
+   - 2-column mobile preparation milestone gallery.
+   - Added `theme-color` and Apple web-app meta tags for seamless browser display.
 
 ---
 
-## 5. Current Saved Recipes (in `data/recipes.json`)
-1. **Lemon Garlic Soya**
-2. **Soya Chilli** (High protein, low calories)
-3. **Non-fried Manchurian**
-4. **Paneer Tikka Roll**
-5. **Masoor Dal & Tomato Crispy Crackers**
-6. **Air Fryer Schezwan Fried Rice**
+## 5. Deployment & Links
+* **Git Remote**: `git@github.com:iMrugesh9/recipe-helper.git` (Branch: `main`)
+* **GitHub Pages Site**: [https://imrugesh9.github.io/recipe-helper/](https://imrugesh9.github.io/recipe-helper/)
+* **Static Feed**: [https://imrugesh9.github.io/recipe-helper/recipes.json](https://imrugesh9.github.io/recipe-helper/recipes.json)
+
+---
+
+## 6. Current Saved Recipes (in `data/recipes.json`)
+1. **Lehsuni Dhaniya Paneer** (Instagram Reel)
+2. **Lemon Garlic Soya** (YouTube Short)
+3. **Soya Chilli** (High protein, low calories) (YouTube Short)
+4. **Non-fried Manchurian** (Instagram Reel)
+5. **Paneer Tikka Roll** (YouTube Short)
+6. **Masoor Dal & Tomato Crispy Crackers** (Instagram Reel)
+7. **Air Fryer Schezwan Fried Rice** (Instagram Reel)
