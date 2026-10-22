@@ -1,0 +1,10 @@
+flask
+yt-dlp
+google-genai
+jinja2
+python-dotenv
+opencv-python-headless
+pillow
+# Optional: for audio transcription fallback when no subtitles are available
+# openai-whisper
+

@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ recipe.recipe_name }} — Recipe Card</title>
+  <meta name="description" content="{{ recipe.description }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0d0f14;
+      --surface:      #151820;
+      --surface2:     #1c2030;
+      --border:       rgba(255,255,255,0.07);
+      --accent:       #ff6b35;
+      --accent2:      #f7c59f;
+      --accent-glow:  rgba(255,107,53,0.25);
+      --green:        #4caf82;
+      --blue:         #5b9cf6;
+      --purple:       #a78bfa;
+      --yellow:       #fbbf24;
+      --text:         #e8eaf0;
+      --text-muted:   #7a8099;
+      --text-dim:     #4a5068;
+      --radius-sm:    8px;
+      --radius:       14px;
+      --radius-lg:    22px;
+      --shadow:       0 4px 24px rgba(0,0,0,0.4);
+      --shadow-lg:    0 12px 60px rgba(0,0,0,0.6);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Scrollbar ──────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 99px; }
+
+    /* ── Hero / Header ──────────────────────────────────────── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 420px;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.35) saturate(1.2);
+      transform: scale(1.05);
+      transition: transform 8s ease;
+    }
+    .hero:hover .hero-bg { transform: scale(1.0); }
+
+    .hero-bg-fallback {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 40%, #2a1a0e 0%, #0d0f14 60%),
+                  linear-gradient(135deg, #1a0f05 0%, #0d0f14 100%);
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(13,15,20,1) 0%,
+        rgba(13,15,20,0.7) 50%,
+        rgba(13,15,20,0.1) 100%
+      );
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 32px 40px;
+    }
+
+    .recipe-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 99px;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: #fff;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+      margin-bottom: 12px;
+    }
+
+    .hero-description {
+      font-size: 1.05rem;
+      color: var(--accent2);
+      max-width: 600px;
+      font-weight: 300;
+      margin-bottom: 28px;
+    }
+
+    .meta-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .chip-icon { font-size: 14px; }
+
+    .chip.difficulty-easy   { border-color: rgba(76,175,130,0.4); color: var(--green); }
+    .chip.difficulty-medium { border-color: rgba(251,191,36,0.4);  color: var(--yellow); }
+    .chip.difficulty-hard   { border-color: rgba(255,107,53,0.4);  color: var(--accent); }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .page-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 680px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    /* ── Section Cards ──────────────────────────────────────── */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .section:hover {
+      border-color: rgba(255,107,53,0.2);
+      box-shadow: 0 6px 32px rgba(255,107,53,0.08);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 22px 28px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .icon-orange { background: rgba(255,107,53,0.15); }
+    .icon-green  { background: rgba(76,175,130,0.15); }
+    .icon-blue   { background: rgba(91,156,246,0.15); }
+    .icon-purple { background: rgba(167,139,250,0.15); }
+    .icon-yellow { background: rgba(251,191,36,0.15); }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+
+    .section-count {
+      margin-left: auto;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--surface2);
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+
+    .section-body { padding: 20px 28px; }
+
+    /* ── Ingredients ────────────────────────────────────────── */
+    .ingredient-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .ingredient-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.15s ease;
+      position: relative;
+      user-select: none;
+    }
+
+    .ingredient-item:hover { background: var(--surface2); }
+    .ingredient-item.checked { opacity: 0.45; }
+    .ingredient-item.checked .ingredient-name { text-decoration: line-through; }
+
+    .ingredient-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--text-dim);
+      border-radius: 5px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+      transition: all 0.2s ease;
+    }
+
+    .ingredient-item.checked .ingredient-checkbox {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .ingredient-item.checked .ingredient-checkbox::after {
+      content: "✓";
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .ingredient-info { flex: 1; }
+    .ingredient-name { font-weight: 500; font-size: 0.95rem; }
+    .ingredient-quantity {
+      font-size: 0.82rem;
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: 1px;
+    }
+    .ingredient-note {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ── Tools ──────────────────────────────────────────────── */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+    }
+
+    .tool-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      transition: all 0.2s ease;
+    }
+
+    .tool-card:hover {
+      border-color: rgba(91,156,246,0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+
+    .tool-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+    .tool-purpose { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
+
+    /* ── Steps ──────────────────────────────────────────────── */
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 20px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .step-item:last-child { border-bottom: none; }
+
+    .step-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      flex-shrink: 0;
+    }
+
+    .step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 0 16px var(--accent-glow);
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-line {
+      width: 2px;
+      flex: 1;
+      background: linear-gradient(to bottom, var(--accent), transparent);
+      margin-top: 4px;
+      min-height: 30px;
+      opacity: 0.3;
+    }
+
+    .step-item:last-child .step-line { display: none; }
+
+    .step-content { flex: 1; padding-top: 6px; }
+
+    .step-title {
+      font-weight: 700;
+      font-size: 0.98rem;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+
+    .step-instruction {
+      font-size: 0.9rem;
+      color: #b0b8cc;
+      line-height: 1.7;
+    }
+
+    .step-duration {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 10px;
+      background: rgba(251,191,36,0.1);
+      border: 1px solid rgba(251,191,36,0.2);
+      color: var(--yellow);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+
+    /* ── Tips ───────────────────────────────────────────────── */
+    .tips-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tip-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      background: rgba(167,139,250,0.05);
+      border: 1px solid rgba(167,139,250,0.15);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      color: #c5cadc;
+      transition: all 0.2s ease;
+    }
+
+    .tip-item:hover {
+      background: rgba(167,139,250,0.1);
+      border-color: rgba(167,139,250,0.3);
+    }
+
+    .tip-bullet { font-size: 18px; flex-shrink: 0; }
+
+    /* ── Tags ───────────────────────────────────────────────── */
+    .tags-section {
+      padding: 20px 0 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 99px;
+      transition: all 0.15s ease;
+    }
+
+    .tag:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Source Link ────────────────────────────────────────── */
+    .source-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 22px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .source-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .source-link {
+      color: var(--blue);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      word-break: break-all;
+      transition: color 0.15s ease;
+    }
+
+    .source-link:hover { color: var(--accent); text-decoration: underline; }
+
+    .source-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 18px;
+      border-radius: 99px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .source-btn:hover {
+      background: #e85d28;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    /* ── Progress Bar ───────────────────────────────────────── */
+    .progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      z-index: 100;
+      background: rgba(255,255,255,0.06);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* ── Footer ─────────────────────────────────────────────── */
+    .footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: var(--text-dim);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Print styles ───────────────────────────────────────── */
+    @media print {
+      body { background: white; color: black; }
+      .progress-container, .source-btn { display: none; }
+      .section { border: 1px solid #ddd; box-shadow: none; }
+    }
+
+    /* ── Animations ─────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-up {
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    .fade-up:nth-child(1) { animation-delay: 0.05s; }
+    .fade-up:nth-child(2) { animation-delay: 0.10s; }
+    .fade-up:nth-child(3) { animation-delay: 0.15s; }
+    .fade-up:nth-child(4) { animation-delay: 0.20s; }
+    .fade-up:nth-child(5) { animation-delay: 0.25s; }
+    .fade-up:nth-child(6) { animation-delay: 0.30s; }
+    .fade-up:nth-child(7) { animation-delay: 0.35s; }
+
+    /* ── Empty state ────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      padding: 20px 0;
+    }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .hero-content { padding: 32px 20px 28px; }
+      .section-header { padding: 18px 20px 14px; }
+      .section-body { padding: 16px 20px; }
+      .source-bar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Reading progress bar -->
+<div class="progress-container" aria-hidden="true">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<!-- ── Hero ───────────────────────────────────────────────── -->
+<header class="hero">
+  {% if thumbnail_url %}
+  <div class="hero-bg" style="background-image: url('{{ thumbnail_url }}')"></div>
+  {% else %}
+  <div class="hero-bg-fallback"></div>
+  {% endif %}
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="recipe-badge">🍽️ &nbsp;Recipe Card</div>
+    <h1>{{ recipe.recipe_name }}</h1>
+    {% if recipe.description %}
+    <p class="hero-description">{{ recipe.description }}</p>
+    {% endif %}
+    <div class="meta-chips">
+      {% if recipe.cuisine_type %}
+      <span class="chip"><span class="chip-icon">🌍</span> {{ recipe.cuisine_type }}</span>
+      {% endif %}
+      {% if recipe.servings %}
+      <span class="chip"><span class="chip-icon">👥</span> {{ recipe.servings }}</span>
+      {% endif %}
+      {% if recipe.prep_time and recipe.prep_time != 'null' %}
+      <span class="chip"><span class="chip-icon">⏱️</span> Prep: {{ recipe.prep_time }}</span>
+      {% endif %}
+      {% if recipe.cook_time and recipe.cook_time != 'null' %}
+      <span class="chip"><span class="chip-icon">🔥</span> Cook: {{ recipe.cook_time }}</span>
+      {% endif %}
+      {% if recipe.difficulty %}
+      <span class="chip difficulty-{{ recipe.difficulty | lower }}">
+        {% if recipe.difficulty | lower == 'easy' %}⭐{% elif recipe.difficulty | lower == 'hard' %}⭐⭐⭐{% else %}⭐⭐{% endif %}
+        {{ recipe.difficulty }}
+      </span>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+<!-- ── Main content ────────────────────────────────────────── -->
+<main class="page-wrapper" role="main">
+
+  <!-- Source bar -->
+  <div class="source-bar" style="margin-top: 28px;">
+    <div>
+      <div class="source-label">Source Video</div>
+      <a class="source-link" href="{{ source_url }}" target="_blank" rel="noopener">{{ source_url }}</a>
+    </div>
+    <a class="source-btn" href="{{ source_url }}" target="_blank" rel="noopener" id="watchVideoBtn">
+      ▶ Watch Video
+    </a>
+  </div>
+
+  <div class="grid-2">
+
+    <!-- ── Ingredients ─────────────────────────────────────── -->
+    <section class="section fade-up" aria-labelledby="ingredients-heading">
+      <div class="section-header">
+        <div class="section-icon icon-orange">🧾</div>
+        <h2 class="section-title" id="ingredients-heading">Ingredients</h2>
+        {% if recipe.ingredients %}
+        <span class="section-count">{{ recipe.ingredients | length }}</span>
+        {% endif %}
+      </div>
+      <div class="section-body">
+        {% if recipe.ingredients %}
+        <ul class="ingredient-list" id="ingredientList">
+          {% for item in recipe.ingredients %}
+          <li class="ingredient-item" onclick="toggleIngredient(this)" role="checkbox" aria-checked="false" tabindex="0">
+            <div class="ingredient-checkbox"></div>
+            <div class="ingredient-info">
+              <div class="ingredient-name">{{ item.name }}</div>
+              {% if item.quantity %}
+              <div class="ingredient-quantity">{{ item.quantity }}</div>
+              {% endif %}
+              {% if item.note %}
+              <div class="ingredient-note">{{ item.note }}</div>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-state">No ingredients detected.</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- ── Tools ───────────────────────────────────────────── -->
+    <section class="section fade-up" aria-labelledby="tools-heading">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🔧</div>
+        <h2 class="section-title" id="tools-heading">Tools & Equipment</h2>
+        {% if recipe.tools %}
+        <span class="section-count">{{ recipe.tools | length }}</span>
+        {% endif %}
+      </div>
+      <div class="section-body">
+        {% if recipe.tools %}
+        <div class="tools-grid">
+          {% for tool in recipe.tools %}
+          <div class="tool-card">
+            <div class="tool-name">{{ tool.name }}</div>
+            {% if tool.purpose %}
+            <div class="tool-purpose">{{ tool.purpose }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state">No special tools detected.</p>
+        {% endif %}
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ── Steps ───────────────────────────────────────────────── -->
+  <section class="section fade-up" aria-labelledby="steps-heading">
+    <div class="section-header">
+      <div class="section-icon icon-green">👨‍🍳</div>
+      <h2 class="section-title" id="steps-heading">Step-by-Step Process</h2>
+      {% if recipe.steps %}
+      <span class="section-count">{{ recipe.steps | length }} steps</span>
+      {% endif %}
+    </div>
+    <div class="section-body">
+      {% if recipe.steps %}
+      <ol class="steps-list" style="list-style: none;">
+        {% for step in recipe.steps %}
+        <li class="step-item">
+          <div class="step-left">
+            <div class="step-number">{{ step.step_number }}</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            {% if step.title %}
+            <div class="step-title">{{ step.title }}</div>
+            {% endif %}
+            <div class="step-instruction">{{ step.instruction }}</div>
+            {% if step.duration %}
+            <span class="step-duration">⏱️ {{ step.duration }}</span>
+            {% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <p class="empty-state">No steps detected.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ── Tips ─────────────────────────────────────────────────── -->
+  {% if recipe.tips and recipe.tips | length > 0 %}
+  <section class="section fade-up" aria-labelledby="tips-heading">
+    <div class="section-header">
+      <div class="section-icon icon-purple">💡</div>
+      <h2 class="section-title" id="tips-heading">Tips & Tricks</h2>
+      <span class="section-count">{{ recipe.tips | length }}</span>
+    </div>
+    <div class="section-body">
+      <ul class="tips-list" style="list-style: none;">
+        {% for tip in recipe.tips %}
+        <li class="tip-item">
+          <span class="tip-bullet">💡</span>
+          <span>{{ tip }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ── Tags ─────────────────────────────────────────────────── -->
+  {% if recipe.tags and recipe.tags | length > 0 %}
+  <div class="tags-section" role="list" aria-label="Recipe tags">
+    {% for tag in recipe.tags %}
+    <span class="tag" role="listitem">#{{ tag }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</main>
+
+<!-- ── Footer ──────────────────────────────────────────────── -->
+<footer class="footer">
+  Generated by <strong>Recipe Helper Agent</strong> · {{ generated_at }}
+</footer>
+
+<script>
+  // ── Reading progress bar ────────────────────────────────────
+  const progressBar = document.getElementById('progressBar');
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = progress + '%';
+  });
+
+  // ── Ingredient checklist ────────────────────────────────────
+  function toggleIngredient(el) {
+    el.classList.toggle('checked');
+    const checked = el.classList.contains('checked');
+    el.setAttribute('aria-checked', checked);
+  }
+
+  // Keyboard support for ingredient items
+  document.querySelectorAll('.ingredient-item').forEach(item => {
+    item.addEventListener('keydown', e => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        toggleIngredient(item);
+      }
+    });
+  });
+
+  // ── Intersection Observer for fade-up ──────────────────────
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.animationPlayState = 'running';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-up').forEach(el => {
+    el.style.animationPlayState = 'paused';
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>

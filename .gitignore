@@ -1,0 +1,17 @@
+.env
+.venv/
+output/
+__pycache__/
+*.py[cod]
+*.whisper/
+*.mp4
+*.webm
+*.mp3
+*.wav
+*.json
+!data/recipes.json
+!docs/**
+!docs/recipes.json
+*.vtt
+*.srt
+*.m4a
