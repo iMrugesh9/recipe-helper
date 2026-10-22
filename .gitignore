@@ -16,3 +16,5 @@ __pycache__/
 *.srt
 *.m4a
 *.bundle
+*.log
+*.pid

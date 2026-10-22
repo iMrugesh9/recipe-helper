@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff7b39" />
+      <stop offset="50%" stop-color="#ff5722" />
+      <stop offset="100%" stop-color="#e64a19" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.35" />
+    </filter>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#bg)" />
+  <!-- Chef Hat -->
+  <g fill="#ffffff" filter="url(#shadow)" transform="translate(48, 48) scale(0.625)">
+    <path d="M128 32 C104 32 85 49 81 71 C72 66 61 64 50 67 C30 73 17 92 18 113 C19 123 23 132 29 139 C14 149 6 166 8 185 C11 209 31 228 55 228 L201 228 C225 228 245 209 248 185 C250 166 242 149 227 139 C233 132 237 123 238 113 C239 92 226 73 206 67 C195 64 184 66 175 71 C171 49 152 32 128 32 Z" />
+    <rect x="44" y="244" width="168" height="28" rx="8" />
+    <!-- Fork & Knife crossed below -->
+    <path d="M72 170 L184 170" stroke="#ff5722" stroke-width="8" stroke-linecap="round" />
+    <circle cx="96" cy="202" r="6" fill="#ff5722" />
+    <circle cx="128" cy="202" r="6" fill="#ff5722" />
+    <circle cx="160" cy="202" r="6" fill="#ff5722" />
+  </g>
+</svg>
