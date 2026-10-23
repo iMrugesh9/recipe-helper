@@ -100,30 +100,6 @@
     .filter-search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
     .filter-search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.5; font-size: 16px; }
 
-    /* Category Quick Filter Pills */
-    .type-pill-bar {
-      display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 14px;
-      scrollbar-width: none; -ms-overflow-style: none; margin-bottom: 14px;
-    }
-    .type-pill-bar::-webkit-scrollbar { display: none; }
-    .type-pill {
-      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-      background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
-      padding: 8px 15px; border-radius: 99px; font-size: 12.5px; font-weight: 600;
-      cursor: pointer; transition: all 0.2s ease;
-    }
-    .type-pill:hover { color: var(--text); border-color: var(--accent); background: var(--surface3); }
-    .type-pill.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 14px var(--accent-glow); }
-    .type-overlay-badge {
-      background: rgba(8,11,18,0.75); border: 1px solid rgba(255,255,255,0.18);
-      font-size: 11px; padding: 3px 9px; border-radius: 99px; color: var(--accent2); font-weight: 600;
-      backdrop-filter: blur(8px);
-    }
-    .type-chip {
-      background: var(--accent-dim) !important; color: var(--accent2) !important;
-      border-color: rgba(255,107,53,0.3) !important; font-weight: 600 !important;
-    }
-
     .filter-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;
     }
@@ -435,38 +411,12 @@
 
     <!-- Filters -->
     <div class="filter-panel">
-      <!-- Quick Category Pills -->
-      <div class="type-pill-bar" id="typePillBar">
-        <button class="type-pill active" onclick="setTypeFilter('all', this)">✨ All (<span id="typeCountAll">0</span>)</button>
-        <button class="type-pill" onclick="setTypeFilter('Main Course', this)">🍲 Main Course (<span id="typeCountMain">0</span>)</button>
-        <button class="type-pill" onclick="setTypeFilter('High Protein', this)">💪 High Protein (<span id="typeCountProtein">0</span>)</button>
-        <button class="type-pill" onclick="setTypeFilter('Snack', this)">🥪 Snacks (<span id="typeCountSnack">0</span>)</button>
-        <button class="type-pill" onclick="setTypeFilter('Breakfast', this)">🌅 Breakfast (<span id="typeCountBreakfast">0</span>)</button>
-        <button class="type-pill" onclick="setTypeFilter('Dessert', this)">🍰 Desserts (<span id="typeCountDessert">0</span>)</button>
-        <button class="type-pill" onclick="setTypeFilter('Salad', this)">🥗 Salads (<span id="typeCountSalad">0</span>)</button>
-        <button class="type-pill" onclick="setTypeFilter('Drink', this)">🥤 Drinks (<span id="typeCountDrink">0</span>)</button>
-      </div>
-
       <div class="filter-search-wrap">
         <span class="filter-search-icon">🔍</span>
-        <input type="text" id="searchInput" class="filter-search-input" placeholder="Search by recipe name, ingredient, tool, cuisine, or category..." />
+        <input type="text" id="searchInput" class="filter-search-input" placeholder="Search by recipe name, ingredient, tool, or cuisine..." />
       </div>
 
       <div class="filter-grid">
-        <div class="filter-group">
-          <label class="filter-label">Type of Recipe</label>
-          <select id="filterRecipeType" class="filter-select" onchange="onTypeSelectChange(this.value)">
-            <option value="all">All Recipe Types</option>
-            <option value="Main Course">🍲 Main Course</option>
-            <option value="High Protein">💪 High Protein</option>
-            <option value="Snack">🥪 Snack & Appetizer</option>
-            <option value="Breakfast">🌅 Breakfast</option>
-            <option value="Dessert">🍰 Dessert & Sweets</option>
-            <option value="Salad">🥗 Salad & Bowls</option>
-            <option value="Drink">🥤 Drink & Beverage</option>
-          </select>
-        </div>
-
         <div class="filter-group">
           <label class="filter-label">Difficulty</label>
           <select id="filterDifficulty" class="filter-select">
@@ -534,41 +484,6 @@
 
   <script>
     let allRecipes = [];
-    let currentTypeFilter = 'all';
-
-    function getTypeEmoji(t) {
-      const s = (t || '').toLowerCase();
-      if (s.includes('protein')) return '💪';
-      if (s.includes('snack')) return '🥪';
-      if (s.includes('breakfast')) return '🌅';
-      if (s.includes('dessert') || s.includes('sweet')) return '🍰';
-      if (s.includes('salad')) return '🥗';
-      if (s.includes('drink') || s.includes('smoothie')) return '🥤';
-      if (s.includes('quick')) return '⚡';
-      return '🍲';
-    }
-
-    function setTypeFilter(type, btn) {
-      currentTypeFilter = type;
-      const select = document.getElementById('filterRecipeType');
-      if (select) select.value = type;
-      document.querySelectorAll('.type-pill').forEach(b => b.classList.remove('active'));
-      if (btn) btn.classList.add('active');
-      applyFilters();
-    }
-
-    function onTypeSelectChange(val) {
-      currentTypeFilter = val;
-      document.querySelectorAll('.type-pill').forEach(b => {
-        const txt = b.getAttribute('onclick') || '';
-        if (txt.includes(`'${val}'`) || (val === 'all' && txt.includes("'all'"))) {
-          b.classList.add('active');
-        } else {
-          b.classList.remove('active');
-        }
-      });
-      applyFilters();
-    }
 
     // Load recipes: first from embedded script, fallback to fetch
     function initData() {
@@ -604,31 +519,6 @@
     function updateStats() {
       const countEl = document.getElementById('statCount');
       if (countEl) countEl.textContent = allRecipes.length;
-
-      const counts = {
-        all: allRecipes.length,
-        'Main Course': 0,
-        'High Protein': 0,
-        'Snack': 0,
-        'Breakfast': 0,
-        'Dessert': 0,
-        'Salad': 0,
-        'Drink': 0
-      };
-
-      allRecipes.forEach(item => {
-        const t = item.recipe?.recipe_type || 'Main Course';
-        if (counts[t] !== undefined) counts[t]++;
-      });
-
-      if (document.getElementById('typeCountAll')) document.getElementById('typeCountAll').textContent = counts.all;
-      if (document.getElementById('typeCountMain')) document.getElementById('typeCountMain').textContent = counts['Main Course'];
-      if (document.getElementById('typeCountProtein')) document.getElementById('typeCountProtein').textContent = counts['High Protein'];
-      if (document.getElementById('typeCountSnack')) document.getElementById('typeCountSnack').textContent = counts['Snack'];
-      if (document.getElementById('typeCountBreakfast')) document.getElementById('typeCountBreakfast').textContent = counts['Breakfast'];
-      if (document.getElementById('typeCountDessert')) document.getElementById('typeCountDessert').textContent = counts['Dessert'];
-      if (document.getElementById('typeCountSalad')) document.getElementById('typeCountSalad').textContent = counts['Salad'];
-      if (document.getElementById('typeCountDrink')) document.getElementById('typeCountDrink').textContent = counts['Drink'];
     }
 
     function parseMinutes(str) {
@@ -646,7 +536,6 @@
     function applyFilters() {
       const search = (document.getElementById('searchInput').value || '').toLowerCase().trim();
       const diff = document.getElementById('filterDifficulty').value;
-      const recipeType = (document.getElementById('filterRecipeType')?.value || currentTypeFilter || 'all').toLowerCase();
       const maxCook = document.getElementById('filterCookTime').value;
       const maxPrep = document.getElementById('filterPrepTime').value;
       const sort = document.getElementById('filterSort').value;
@@ -655,16 +544,11 @@
         const r = item.recipe || {};
         if (search) {
           const haystack = [
-            r.recipe_name, r.description, r.cuisine_type, r.recipe_type,
+            r.recipe_name, r.description, r.cuisine_type,
             ...(r.ingredients || []).map(i => i.name),
             ...(r.tools || []).map(t => t.name)
           ].join(' ').toLowerCase();
           if (!haystack.includes(search)) return false;
-        }
-
-        if (recipeType !== 'all') {
-          const rType = (r.recipe_type || 'Main Course').toLowerCase();
-          if (rType !== recipeType) return false;
         }
 
         if (diff !== 'all' && (r.difficulty || '').toLowerCase() !== diff.toLowerCase()) {
@@ -732,16 +616,12 @@
             ${thumb ? `<img src="${thumb}" alt="${escHtml(r.recipe_name)}" class="card-thumb" loading="lazy" />` : ''}
             <div class="card-overlay">
               <span class="diff-badge ${diffClass}">⭐ ${escHtml(r.difficulty || 'Easy')}</span>
-              <div style="display:flex; align-items:center; gap:6px;">
-                ${r.recipe_type ? `<span class="type-overlay-badge">${getTypeEmoji(r.recipe_type)} ${escHtml(r.recipe_type)}</span>` : ''}
-                <span class="source-badge">${isIg ? '📸 Reel' : '▶️ Short'}</span>
-              </div>
+              <span class="source-badge">${isIg ? '📸 Reel' : '▶️ Short'}</span>
             </div>
           </div>
           <div class="card-body">
             <h3 class="card-title">${escHtml(r.recipe_name || 'Untitled Recipe')}</h3>
             <div class="card-chips">
-              ${r.recipe_type ? `<span class="card-chip type-chip">${getTypeEmoji(r.recipe_type)} ${escHtml(r.recipe_type)}</span>` : ''}
               ${r.cuisine_type ? `<span class="card-chip">🌍 ${escHtml(r.cuisine_type)}</span>` : ''}
               ${r.servings ? `<span class="card-chip">👥 ${escHtml(r.servings)}</span>` : ''}
               ${r.cook_time ? `<span class="card-chip">🔥 ${escHtml(r.cook_time)}</span>` : ''}
@@ -766,15 +646,9 @@
     function resetFilters() {
       document.getElementById('searchInput').value = '';
       document.getElementById('filterDifficulty').value = 'all';
-      if (document.getElementById('filterRecipeType')) document.getElementById('filterRecipeType').value = 'all';
       document.getElementById('filterCookTime').value = 'all';
       document.getElementById('filterPrepTime').value = 'all';
       document.getElementById('filterSort').value = 'newest';
-      currentTypeFilter = 'all';
-      document.querySelectorAll('.type-pill').forEach((b, i) => {
-        if (i === 0) b.classList.add('active');
-        else b.classList.remove('active');
-      });
       applyFilters();
     }
 
@@ -797,7 +671,6 @@
             <h2 class="detail-title">${escHtml(r.recipe_name || 'Recipe')}</h2>
             <p class="detail-desc">${escHtml(r.description || '')}</p>
             <div class="detail-chips">
-              ${r.recipe_type ? `<span class="meta-chip" style="background:var(--accent-dim); border-color:var(--accent); color:var(--accent2);">${getTypeEmoji(r.recipe_type)} ${escHtml(r.recipe_type)}</span>` : ''}
               ${r.cuisine_type ? `<span class="meta-chip">🌍 ${escHtml(r.cuisine_type)}</span>` : ''}
               ${r.servings ? `<span class="meta-chip">👥 ${escHtml(r.servings)}</span>` : ''}
               ${r.prep_time ? `<span class="meta-chip">⏱️ Prep: ${escHtml(r.prep_time)}</span>` : ''}
