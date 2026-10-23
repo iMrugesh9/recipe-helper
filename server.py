@@ -582,34 +582,48 @@ def save_recipe(recipe_entry: dict):
 
 def update_recipe_difficulty(recipe_id: str, new_difficulty: str) -> bool:
     """Update difficulty rating for a saved recipe."""
+    return update_recipe_fields(recipe_id, {"difficulty": new_difficulty})
+
+
+def update_recipe_fields(recipe_id: str, updates: dict) -> bool:
+    """Update fields like difficulty, recipe_type, cuisine_type for a saved recipe."""
     recipes = load_recipes()
     updated = False
     for r in recipes:
         if r.get("id") == recipe_id:
             if "recipe" in r:
-                r["recipe"]["difficulty"] = new_difficulty
+                for k, v in updates.items():
+                    r["recipe"][k] = v
                 updated = True
             break
     if updated:
         try:
             with open(DATA_FILE, "w", encoding="utf-8") as f:
                 json.dump(recipes, f, ensure_ascii=False, indent=2)
-            print(f"[storage] Updated recipe {recipe_id} difficulty to {new_difficulty}")
+            print(f"[storage] Updated recipe {recipe_id} fields: {updates}")
             trigger_github_sync_async()
             return True
         except Exception as e:
-            print(f"[storage] Update difficulty error: {e}")
+            print(f"[storage] Update fields error: {e}")
     return False
 
 
 def delete_recipe(recipe_id: str) -> bool:
-    """Delete recipe by ID."""
+    """Delete recipe by ID and remove video stream."""
     recipes = load_recipes()
     new_recipes = [r for r in recipes if r.get("id") != recipe_id]
     if len(new_recipes) != len(recipes):
         try:
+            for ext in [".mp4", ".webm", ".mkv"]:
+                vpath = VIDEOS_DIR / f"{recipe_id}{ext}"
+                if vpath.exists():
+                    try:
+                        vpath.unlink()
+                    except Exception:
+                        pass
             with open(DATA_FILE, "w", encoding="utf-8") as f:
                 json.dump(new_recipes, f, ensure_ascii=False, indent=2)
+            print(f"[storage] Deleted recipe: {recipe_id}")
             trigger_github_sync_async()
             return True
         except Exception as e:
@@ -642,16 +656,26 @@ def get_recipes():
 
 @app.route("/api/recipes/<recipe_id>", methods=["PATCH"])
 def update_recipe(recipe_id):
-    """Update recipe properties such as difficulty."""
+    """Update recipe properties such as difficulty or recipe_type."""
     data = request.get_json() or {}
-    new_difficulty = data.get("difficulty")
-    if not new_difficulty:
-        return jsonify({"error": "No difficulty provided"}), 400
-    norm_diff = new_difficulty.strip().capitalize()
-    if norm_diff not in ["Easy", "Medium", "Hard"]:
-        norm_diff = new_difficulty.strip()
-    success = update_recipe_difficulty(recipe_id, norm_diff)
-    return jsonify({"success": success, "difficulty": norm_diff})
+    updates = {}
+    if "difficulty" in data and data["difficulty"]:
+        norm_diff = data["difficulty"].strip().capitalize()
+        if norm_diff not in ["Easy", "Medium", "Hard"]:
+            norm_diff = data["difficulty"].strip()
+        updates["difficulty"] = norm_diff
+    if "recipe_type" in data and data["recipe_type"]:
+        updates["recipe_type"] = data["recipe_type"].strip()
+    if "meal_type" in data and data["meal_type"]:
+        updates["recipe_type"] = data["meal_type"].strip()
+    if "cuisine_type" in data and data["cuisine_type"]:
+        updates["cuisine_type"] = data["cuisine_type"].strip()
+
+    if not updates:
+        return jsonify({"error": "No valid fields provided to update"}), 400
+
+    success = update_recipe_fields(recipe_id, updates)
+    return jsonify({"success": success, "updates": updates})
 
 
 @app.route("/api/recipes/<recipe_id>/difficulty", methods=["POST"])

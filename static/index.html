@@ -695,6 +695,97 @@
       margin-left: 1px;
       pointer-events: none;
     }
+
+    /* Card Type Selector */
+    .saved-card-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 99px;
+      background: rgba(15,20,32,0.85);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: var(--accent2);
+      backdrop-filter: blur(8px);
+      cursor: pointer;
+    }
+    .card-type-select {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      padding: 0 2px;
+    }
+    .card-type-select option {
+      background: #161c2e;
+      color: #e2e8f8;
+      font-size: 13px;
+    }
+
+    /* Category Quick Filter Pills */
+    .type-pill-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 2px 2px 14px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      margin-bottom: 12px;
+    }
+    .type-pill-bar::-webkit-scrollbar { display: none; }
+    .type-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 7px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .type-pill:hover {
+      color: var(--text);
+      border-color: var(--accent);
+      background: var(--surface3);
+    }
+    .type-pill.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+    .btn-delete-view {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #f87171;
+      padding: 8px 14px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-delete-view:hover {
+      background: #ef4444;
+      color: #fff;
+      border-color: #ef4444;
+    }
     .saved-card-video-pill {
       background: rgba(255, 107, 53, 0.22);
       color: var(--accent2);
@@ -1800,7 +1891,10 @@
         <div class="source-label">Source Video</div>
         <a class="source-url" id="sourceLink" href="#" target="_blank" rel="noopener">—</a>
       </div>
-      <a class="watch-btn" id="watchBtn" href="#" target="_blank" rel="noopener">▶ Watch Video</a>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <a class="watch-btn" id="watchBtn" href="#" target="_blank" rel="noopener">▶ Watch Video</a>
+        <button class="btn-delete-view" id="deleteDetailBtn" onclick="deleteCurrentViewRecipe()" title="Remove this recipe from your collection">🗑️ Remove</button>
+      </div>
     </div>
 
     <!-- Downloaded Video Section -->
@@ -1901,6 +1995,18 @@
 
     <!-- Filter Panel -->
     <div class="filter-panel">
+      <!-- Category Quick Filter Pills -->
+      <div class="type-pill-bar" id="localTypePillBar">
+        <button class="type-pill active" onclick="setLocalTypeFilter('all', this)">✨ All (<span id="localTypeCountAll">0</span>)</button>
+        <button class="type-pill" onclick="setLocalTypeFilter('Main Course', this)">🍲 Main (<span id="localTypeCountMain">0</span>)</button>
+        <button class="type-pill" onclick="setLocalTypeFilter('High Protein', this)">💪 Protein (<span id="localTypeCountProtein">0</span>)</button>
+        <button class="type-pill" onclick="setLocalTypeFilter('Snack', this)">🥪 Snacks (<span id="localTypeCountSnack">0</span>)</button>
+        <button class="type-pill" onclick="setLocalTypeFilter('Breakfast', this)">🌅 Breakfast (<span id="localTypeCountBreakfast">0</span>)</button>
+        <button class="type-pill" onclick="setLocalTypeFilter('Dessert', this)">🍰 Desserts (<span id="localTypeCountDessert">0</span>)</button>
+        <button class="type-pill" onclick="setLocalTypeFilter('Salad', this)">🥗 Salads (<span id="localTypeCountSalad">0</span>)</button>
+        <button class="type-pill" onclick="setLocalTypeFilter('Drink', this)">🥤 Drinks (<span id="localTypeCountDrink">0</span>)</button>
+      </div>
+
       <!-- Search Box -->
       <div class="search-box-row">
         <span class="search-icon">🔍</span>
@@ -1915,6 +2021,21 @@
 
       <!-- Filter Controls Grid -->
       <div class="filters-grid">
+        <!-- Type of Recipe -->
+        <div class="filter-group">
+          <label class="filter-label" for="filterRecipeType">Type of Recipe</label>
+          <select class="filter-select" id="filterRecipeType" onchange="onLocalTypeSelectChange(this.value)">
+            <option value="all">All Types</option>
+            <option value="Main Course">🍲 Main Course</option>
+            <option value="High Protein">💪 High Protein</option>
+            <option value="Snack">🥪 Snack & Appetizer</option>
+            <option value="Breakfast">🌅 Breakfast</option>
+            <option value="Dessert">🍰 Dessert & Sweets</option>
+            <option value="Salad">🥗 Salad & Bowls</option>
+            <option value="Drink">🥤 Drink & Beverage</option>
+          </select>
+        </div>
+
         <!-- Difficulty -->
         <div class="filter-group">
           <label class="filter-label" for="filterDifficulty">Difficulty</label>
@@ -2116,21 +2237,131 @@
     return (hrs * 60) + mins;
   }
 
+  let currentLocalTypeFilter = 'all';
+
+  function getTypeEmoji(t) {
+    const s = (t || '').toLowerCase();
+    if (s.includes('protein')) return '💪';
+    if (s.includes('snack')) return '🥪';
+    if (s.includes('breakfast')) return '🌅';
+    if (s.includes('dessert') || s.includes('sweet')) return '🍰';
+    if (s.includes('salad')) return '🥗';
+    if (s.includes('drink') || s.includes('smoothie')) return '🥤';
+    if (s.includes('quick')) return '⚡';
+    return '🍲';
+  }
+
+  function setLocalTypeFilter(type, btn) {
+    currentLocalTypeFilter = type;
+    const select = document.getElementById('filterRecipeType');
+    if (select) select.value = type;
+    document.querySelectorAll('#localTypePillBar .type-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    applyRecipeFilters();
+  }
+
+  function onLocalTypeSelectChange(val) {
+    currentLocalTypeFilter = val;
+    document.querySelectorAll('#localTypePillBar .type-pill').forEach(b => {
+      const txt = b.getAttribute('onclick') || '';
+      if (txt.includes(`'${val}'`) || (val === 'all' && txt.includes("'all'"))) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
+    applyRecipeFilters();
+  }
+
+  async function changeCardType(e, recipeId) {
+    if (e) e.stopPropagation();
+    const newType = e.target.value;
+    const item = allSavedRecipes.find(r => r.id === recipeId);
+    if (item && item.recipe) {
+      item.recipe.recipe_type = newType;
+    }
+    showToast(`Cataloged as ${newType}`);
+    try {
+      await fetch('/api/recipes/' + recipeId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipe_type: newType })
+      });
+      updateLocalTypeCounts();
+      applyRecipeFilters();
+    } catch (err) {
+      console.error('Update type error:', err);
+    }
+  }
+
+  function updateLocalTypeCounts() {
+    const counts = {
+      all: allSavedRecipes.length,
+      'Main Course': 0,
+      'High Protein': 0,
+      'Snack': 0,
+      'Breakfast': 0,
+      'Dessert': 0,
+      'Salad': 0,
+      'Drink': 0
+    };
+    allSavedRecipes.forEach(item => {
+      const t = item.recipe?.recipe_type || 'Main Course';
+      if (counts[t] !== undefined) counts[t]++;
+    });
+    if (document.getElementById('localTypeCountAll')) document.getElementById('localTypeCountAll').textContent = counts.all;
+    if (document.getElementById('localTypeCountMain')) document.getElementById('localTypeCountMain').textContent = counts['Main Course'];
+    if (document.getElementById('localTypeCountProtein')) document.getElementById('localTypeCountProtein').textContent = counts['High Protein'];
+    if (document.getElementById('localTypeCountSnack')) document.getElementById('localTypeCountSnack').textContent = counts['Snack'];
+    if (document.getElementById('localTypeCountBreakfast')) document.getElementById('localTypeCountBreakfast').textContent = counts['Breakfast'];
+    if (document.getElementById('localTypeCountDessert')) document.getElementById('localTypeCountDessert').textContent = counts['Dessert'];
+    if (document.getElementById('localTypeCountSalad')) document.getElementById('localTypeCountSalad').textContent = counts['Salad'];
+    if (document.getElementById('localTypeCountDrink')) document.getElementById('localTypeCountDrink').textContent = counts['Drink'];
+  }
+
+  async function deleteCurrentViewRecipe() {
+    if (!currentRecipeData || !currentRecipeData.id) return;
+    const id = currentRecipeData.id;
+    const name = currentRecipeData.recipe?.recipe_name || 'this recipe';
+    if (!confirm(`Are you sure you want to remove "${name}" from your cookbook?`)) return;
+
+    try {
+      const res = await fetch('/api/recipes/' + id, { method: 'DELETE' });
+      if (res.ok) {
+        allSavedRecipes = allSavedRecipes.filter(r => r.id !== id);
+        const badge = document.getElementById('savedCountBadge');
+        if (badge) badge.textContent = allSavedRecipes.length;
+        showToast(`Removed "${name}" from your collection.`);
+        document.getElementById('recipeOutput').style.display = 'none';
+        switchMainTab('saved');
+        applyRecipeFilters();
+      } else {
+        alert('Could not delete recipe.');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+    }
+  }
+
   // ── Filter and Sort Saved Recipes ────────────────────
   function applyRecipeFilters() {
     const search = (document.getElementById('recipeSearchInput')?.value || '').toLowerCase().trim();
     const diff = document.getElementById('filterDifficulty')?.value || 'all';
+    const recipeType = (document.getElementById('filterRecipeType')?.value || currentLocalTypeFilter || 'all').toLowerCase();
     const cookTime = document.getElementById('filterCookTime')?.value || 'all';
     const prepTime = document.getElementById('filterPrepTime')?.value || 'all';
     const ingCount = document.getElementById('filterIngCount')?.value || 'all';
     const tool = (document.getElementById('filterTool')?.value || 'all').toLowerCase();
     const sort = document.getElementById('filterSort')?.value || 'newest';
 
+    updateLocalTypeCounts();
+
     let filtered = allSavedRecipes.filter(item => {
       const r = item.recipe || {};
       const name = (r.recipe_name || '').toLowerCase();
       const desc = (r.description || '').toLowerCase();
       const cuisine = (r.cuisine_type || '').toLowerCase();
+      const rType = (r.recipe_type || 'Main Course').toLowerCase();
       const ings = r.ingredients || [];
       const tools = r.tools || [];
       const tags = (r.tags || []).join(' ').toLowerCase();
@@ -2141,10 +2372,16 @@
         const matchesDesc = desc.includes(search);
         const matchesCuisine = cuisine.includes(search);
         const matchesTags = tags.includes(search);
+        const matchesType = rType.includes(search);
         const matchesIng = ings.some(i => (i.name || '').toLowerCase().includes(search));
-        if (!matchesName && !matchesDesc && !matchesCuisine && !matchesTags && !matchesIng) {
+        if (!matchesName && !matchesDesc && !matchesCuisine && !matchesTags && !matchesIng && !matchesType) {
           return false;
         }
+      }
+
+      // Recipe Type
+      if (recipeType !== 'all' && rType !== recipeType) {
+        return false;
       }
 
       // Difficulty
@@ -2213,11 +2450,17 @@
   function resetRecipeFilters() {
     if (document.getElementById('recipeSearchInput')) document.getElementById('recipeSearchInput').value = '';
     if (document.getElementById('filterDifficulty')) document.getElementById('filterDifficulty').value = 'all';
+    if (document.getElementById('filterRecipeType')) document.getElementById('filterRecipeType').value = 'all';
     if (document.getElementById('filterCookTime')) document.getElementById('filterCookTime').value = 'all';
     if (document.getElementById('filterPrepTime')) document.getElementById('filterPrepTime').value = 'all';
     if (document.getElementById('filterIngCount')) document.getElementById('filterIngCount').value = 'all';
     if (document.getElementById('filterTool')) document.getElementById('filterTool').value = 'all';
     if (document.getElementById('filterSort')) document.getElementById('filterSort').value = 'newest';
+    currentLocalTypeFilter = 'all';
+    document.querySelectorAll('#localTypePillBar .type-pill').forEach((b, i) => {
+      if (i === 0) b.classList.add('active');
+      else b.classList.remove('active');
+    });
     applyRecipeFilters();
   }
 
@@ -2253,6 +2496,8 @@
       const diff = (r.difficulty || 'Easy').toLowerCase();
       const diffClass = 'diff-' + (diff === 'medium' ? 'medium' : diff === 'hard' ? 'hard' : 'easy');
       const isIg = (item.source_url || '').toLowerCase().includes('instagram.com');
+      const rType = r.recipe_type || 'Main Course';
+      const typeEmoji = getTypeEmoji(rType);
 
       let thumbSrc = item.thumbnail_url || '';
       if (!thumbSrc && r.steps && r.steps.length > 0 && r.steps[0].image) {
@@ -2278,16 +2523,31 @@
         <div class="saved-card-thumb-wrap">
           ${thumbSrc ? `<img src="${thumbSrc}" alt="${escHtml(r.recipe_name)}" class="saved-card-thumb" loading="lazy" />` : '<div style="width:100%; height:100%; background: linear-gradient(135deg, #2a150c, #111827);"></div>'}
           <div class="saved-card-overlay">
-            <div class="saved-card-diff-picker" onclick="event.stopPropagation()">
-              <span class="saved-card-diff ${diffClass}" id="card-diff-badge-${item.id}">
-                ⭐
-                <select class="card-diff-select" onchange="changeCardDifficulty(event, '${item.id}')" title="Change difficulty rating">
-                  <option value="Easy" ${diff === 'easy' ? 'selected' : ''}>Easy</option>
-                  <option value="Medium" ${diff === 'medium' ? 'selected' : ''}>Medium</option>
-                  <option value="Hard" ${diff === 'hard' ? 'selected' : ''}>Hard</option>
+            <div style="display:flex; align-items:center; gap:6px;" onclick="event.stopPropagation()">
+              <div class="saved-card-diff-picker">
+                <span class="saved-card-diff ${diffClass}" id="card-diff-badge-${item.id}">
+                  ⭐
+                  <select class="card-diff-select" onchange="changeCardDifficulty(event, '${item.id}')" title="Change difficulty rating">
+                    <option value="Easy" ${diff === 'easy' ? 'selected' : ''}>Easy</option>
+                    <option value="Medium" ${diff === 'medium' ? 'selected' : ''}>Medium</option>
+                    <option value="Hard" ${diff === 'hard' ? 'selected' : ''}>Hard</option>
+                  </select>
+                  <span class="card-diff-caret">▾</span>
+                </span>
+              </div>
+              <div class="saved-card-type-badge" title="Change recipe category">
+                <span>${typeEmoji}</span>
+                <select class="card-type-select" onchange="changeCardType(event, '${item.id}')">
+                  <option value="Main Course" ${rType === 'Main Course' ? 'selected' : ''}>Main Course</option>
+                  <option value="High Protein" ${rType === 'High Protein' ? 'selected' : ''}>High Protein</option>
+                  <option value="Snack" ${rType === 'Snack' ? 'selected' : ''}>Snack</option>
+                  <option value="Breakfast" ${rType === 'Breakfast' ? 'selected' : ''}>Breakfast</option>
+                  <option value="Dessert" ${rType === 'Dessert' ? 'selected' : ''}>Dessert</option>
+                  <option value="Salad" ${rType === 'Salad' ? 'selected' : ''}>Salad</option>
+                  <option value="Drink" ${rType === 'Drink' ? 'selected' : ''}>Drink</option>
                 </select>
-                <span class="card-diff-caret">▾</span>
-              </span>
+                <span class="card-diff-caret" style="opacity:0.6; font-size:9px;">▾</span>
+              </div>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
               ${item.video_url ? `<span class="saved-card-video-pill" title="Downloaded Video Ready">🎬 Video</span>` : ''}
@@ -2299,6 +2559,7 @@
         <div class="saved-card-body">
           <h3 class="saved-card-title">${escHtml(r.recipe_name || 'Untitled Recipe')}</h3>
           <div class="saved-card-chips">
+            <span class="saved-chip" style="color:var(--accent2); font-weight:600; border-color:rgba(56,189,248,0.25);">${typeEmoji} ${escHtml(rType)}</span>
             ${r.cuisine_type ? `<span class="saved-chip">🌍 ${escHtml(r.cuisine_type)}</span>` : ''}
             ${r.servings ? `<span class="saved-chip">👥 ${escHtml(r.servings)}</span>` : ''}
             <span class="saved-chip">⚡ ${escHtml(totalTimeText)}</span>
