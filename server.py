@@ -564,8 +564,36 @@ def trigger_github_sync_async():
     t.start()
 
 
+def classify_recipe(r: dict) -> str:
+    """Infer recipe category type based on title, description, tags, and ingredients."""
+    if r.get("recipe_type"):
+        return r.get("recipe_type")
+    if r.get("meal_type") and r.get("meal_type") in ["Main Course", "High Protein", "Snack", "Breakfast", "Dessert", "Salad", "Drink"]:
+        return r.get("meal_type")
+    name = (r.get("recipe_name") or "").lower()
+    desc = (r.get("description") or "").lower()
+    tags = " ".join(r.get("tags") or []).lower()
+    ings = " ".join([i.get("name", "") if isinstance(i, dict) else str(i) for i in r.get("ingredients") or []]).lower()
+    text = f"{name} {desc} {tags} {ings}"
+    if any(k in text for k in ["shake", "smoothie", "drink", "juice", "tea", "coffee", "cooler", "mocktail", "beverage", "lassi"]):
+        return "Drink"
+    if any(k in text for k in ["cake", "cookie", "sweet", "halwa", "dessert", "pudding", "ice cream", "kheer", "brownie", "mousse", "chocolate", "jalebi", "pastry"]):
+        return "Dessert"
+    if any(k in text for k in ["salad", "raita", "dressing", "slaw", "kosambari"]):
+        return "Salad"
+    if any(k in text for k in ["high protein", "highprotein", "whey", "soya rice", "moong dal pizza", "paneer roll", "soya chilli"]):
+        return "High Protein"
+    if any(k in text for k in ["paratha", "poha", "upma", "chilla", "oats", "pancake", "toast", "sandwich", "dosa", "idli", "breakfast"]):
+        return "Breakfast"
+    if any(k in text for k in ["cracker", "crispy", "snack", "tikki", "roll", "chaat", "samosa", "pakora", "chips", "dip", "finger", "fries", "bites", "manchurian", "spread", "bhel"]):
+        return "Snack"
+    return "Main Course"
+
+
 def save_recipe(recipe_entry: dict):
     """Save or update recipe in JSON storage."""
+    if recipe_entry.get("recipe") and not recipe_entry["recipe"].get("recipe_type"):
+        recipe_entry["recipe"]["recipe_type"] = classify_recipe(recipe_entry["recipe"])
     DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
     recipes = load_recipes()
     # Deduplicate by source_url (update existing or prepend new)
