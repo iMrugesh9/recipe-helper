@@ -120,6 +120,13 @@ personal-ai/
     - 2-column mobile preparation milestone gallery.
     - Added `theme-color` and Apple web-app meta tags for seamless browser display.
 
+12. **Instagram Caption & Pinned Comments Intelligence Engine**:
+    - Solved recipe extraction inaccuracies where ingredient quantities and secret sauces are not spoken or displayed on-screen, but are published in the post caption or pinned in comments by the creator (e.g., `https://www.instagram.com/reels/Dd3FwFSsjff/` by `@batati.being.batati`).
+    - Configured `yt-dlp` to extract metadata and comments simultaneously via `--write-comments`, with optional session cookie support (`cookies.txt`, `INSTAGRAM_COOKIES_PATH`, `INSTAGRAM_BROWSER`).
+    - Implemented smart comment parsing in `server.py` and `recipe_agent.py` that prioritizes comments made by the creator (`uploader`, `channel`), pinned comments, and comments containing ingredient measurements.
+    - Re-architected Gemini multimodal prompting so the model receives BOTH the full video file and the complete text payload (title, creator, caption, structured comments, and audio transcript), cross-referencing visual timestamps with written ingredients.
+    - Added an optional expandable "Add Pinned Comment / Recipe Notes" input to the web interface (`static/index.html`) and `/api/extract` REST endpoint.
+
 ---
 
 ## 5. Deployment & Links

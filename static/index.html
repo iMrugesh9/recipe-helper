@@ -221,6 +221,49 @@
       margin-bottom: 20px;
     }
 
+    .notes-accordion {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .notes-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 6px 4px;
+      transition: color var(--transition);
+    }
+    .notes-toggle-btn:hover {
+      color: var(--accent2);
+    }
+    .notes-content {
+      margin-top: 8px;
+    }
+    .notes-textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 12px 14px;
+      resize: vertical;
+      box-sizing: border-box;
+      transition: border-color var(--transition);
+    }
+    .notes-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
     .url-input {
       width: 100%;
       background: var(--surface2);
@@ -1826,6 +1869,22 @@
         <button class="input-clear" id="clearBtn" onclick="clearInput()" aria-label="Clear input">✕</button>
       </div>
 
+      <!-- Optional Pinned Comment / Notes input -->
+      <div class="notes-accordion" id="notesAccordion">
+        <button type="button" class="notes-toggle-btn" onclick="toggleNotes()" id="notesToggleBtn">
+          <span>💬 Add Pinned Comment / Recipe Notes <small style="opacity: 0.65; font-weight: 400;">(Optional)</small></span>
+          <span class="notes-arrow" id="notesArrow">▼</span>
+        </button>
+        <div class="notes-content" id="notesContent" style="display: none;">
+          <textarea
+            id="notesInput"
+            class="notes-textarea"
+            placeholder="If the recipe is written in the comments or locked behind Instagram login, paste the pinned comment or notes here..."
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+
       <!-- Submit -->
       <button class="submit-btn" id="submitBtn" onclick="extractRecipe()" id="extractBtn">
         <span class="btn-content">
@@ -2658,8 +2717,23 @@
 
   function clearInput() {
     document.getElementById('urlInput').value = '';
+    const notesEl = document.getElementById('notesInput');
+    if (notesEl) notesEl.value = '';
     hideError();
     document.getElementById('urlInput').focus();
+  }
+
+  function toggleNotes() {
+    const content = document.getElementById('notesContent');
+    const arrow = document.getElementById('notesArrow');
+    if (!content || !arrow) return;
+    if (content.style.display === 'none' || !content.style.display) {
+      content.style.display = 'block';
+      arrow.textContent = '▲';
+    } else {
+      content.style.display = 'none';
+      arrow.textContent = '▼';
+    }
   }
 
   // ── Error helpers ────────────────────────────────────
@@ -2689,6 +2763,8 @@
     if (!url) { showError('Please paste a video URL first.'); return; }
     hideError();
 
+    const notes = document.getElementById('notesInput')?.value.trim() || '';
+
     // Show loading
     const btn = document.getElementById('submitBtn');
     btn.classList.add('loading');
@@ -2703,7 +2779,7 @@
       const res = await fetch('/api/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, notes }),
       });
 
       setStep(3);

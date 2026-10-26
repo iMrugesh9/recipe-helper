@@ -44,6 +44,23 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 # Helpers
 # ─────────────────────────────────────────────
 
+def get_cookie_args() -> list:
+    """Return yt-dlp cookie arguments if configured in environment or project folder."""
+    cookies_path = os.getenv("INSTAGRAM_COOKIES_PATH") or os.getenv("COOKIES_PATH")
+    if cookies_path and os.path.exists(cookies_path):
+        return ["--cookies", cookies_path]
+
+    default_cookie_file = Path(__file__).parent / "cookies.txt"
+    if default_cookie_file.exists():
+        return ["--cookies", str(default_cookie_file)]
+
+    browser = os.getenv("INSTAGRAM_BROWSER") or os.getenv("BROWSER_COOKIES")
+    if browser:
+        return ["--cookies-from-browser", browser]
+
+    return []
+
+
 def detect_platform(url: str) -> str:
     """Detect whether URL is YouTube or Instagram."""
     url = url.lower()
@@ -57,46 +74,103 @@ def detect_platform(url: str) -> str:
 
 def fetch_video_info(url: str, tmpdir: str) -> dict:
     """
-    Use yt-dlp to fetch video metadata and subtitles/transcript.
-    Returns a dict with title, description, transcript, thumbnail_url.
+    Use yt-dlp to fetch video metadata, subtitles, caption, and comments.
+    Returns a dict with title, uploader, caption, comments_text, transcript, thumbnail_url.
     """
     print(f"📥  Fetching video info from: {url}")
+    cookie_args = get_cookie_args()
 
-    # Build yt-dlp command — get metadata + subtitles
+    # Build yt-dlp command — get metadata + comments + subtitles
     cmd = [
         "yt-dlp",
+        "--dump-json",
+        "--no-warnings",
+        "--write-comments",
+    ] + cookie_args + [url]
+
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    info = {}
+    if result.returncode == 0 and result.stdout.strip():
+        for line in result.stdout.strip().split("\n"):
+            line = line.strip()
+            if line.startswith("{") and line.endswith("}"):
+                try:
+                    info = json.loads(line)
+                    break
+                except Exception:
+                    pass
+
+    title       = info.get("title", "Untitled Recipe")
+    description = (info.get("description") or "").strip()
+    uploader    = (info.get("uploader") or "").strip()
+    channel     = (info.get("channel") or "").strip()
+    thumbnail_url = info.get("thumbnail", "")
+    comments_raw = info.get("comments") or []
+
+    # Parse and structure comments
+    uploader_comments = []
+    recipe_comments = []
+    other_comments = []
+
+    recipe_keywords = [
+        "recipe", "ingredient", "ingredients", "measure", "tsp", "tbsp", "tablespoon", "teaspoon",
+        "cup", "cups", "gram", "grams", "gms", "g ", "kg", "pinch", "boiled", "chopped", "crumbled",
+        "method", "step", "instruction", "bake", "air fry", "fry", "servings", "sauce"
+    ]
+
+    uploader_lower = uploader.lower().replace(" ", "")
+    channel_lower = channel.lower().replace(" ", "")
+
+    for c in comments_raw:
+        if not isinstance(c, dict):
+            continue
+        author = (c.get("author") or "").strip()
+        author_lower = author.lower().replace(" ", "")
+        text = (c.get("text") or "").strip()
+        if not text:
+            continue
+
+        is_uploader = False
+        if channel_lower and (channel_lower in author_lower or author_lower in channel_lower):
+            is_uploader = True
+        elif uploader_lower and (uploader_lower in author_lower or author_lower in uploader_lower):
+            is_uploader = True
+        elif c.get("is_favorited") or c.get("is_pinned"):
+            is_uploader = True
+
+        entry = f"@{author}: {text}"
+        if is_uploader:
+            uploader_comments.append(entry)
+        elif any(k in text.lower() for k in recipe_keywords):
+            recipe_comments.append(entry)
+        else:
+            other_comments.append(entry)
+
+    formatted_comments_list = []
+    if uploader_comments:
+        formatted_comments_list.append("=== UPLOADER / PINNED COMMENTS ===")
+        formatted_comments_list.extend(uploader_comments)
+    if recipe_comments:
+        formatted_comments_list.append("=== COMMENTS MENTIONING RECIPES / INGREDIENTS ===")
+        formatted_comments_list.extend(recipe_comments[:15])
+    if other_comments and not uploader_comments and not recipe_comments:
+        formatted_comments_list.append("=== TOP COMMENTS ===")
+        formatted_comments_list.extend(other_comments[:10])
+
+    comments_text = "\n".join(formatted_comments_list)
+
+    # Subtitles / Transcript
+    transcript = ""
+    # Try fetching subtitles if supported
+    sub_cmd = [
+        "yt-dlp",
         "--write-auto-subs",
-        "--sub-langs", "en.*",
+        "--sub-langs", "en.*,hi.*",
         "--skip-download",
-        "--write-info-json",
-        "--write-thumbnail",
-        "--convert-thumbnails", "jpg",
         "-o", f"{tmpdir}/video",
         url,
     ]
-
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        # If subtitles fail, try without subtitle flags
-        print("⚠️   Subtitle fetch failed, trying audio transcription fallback...")
-        return fetch_via_audio(url, tmpdir)
-
-    # Load metadata JSON
-    info_json_paths = list(Path(tmpdir).glob("video.info.json"))
-    if not info_json_paths:
-        info_json_paths = list(Path(tmpdir).glob("*.info.json"))
-
-    info = {}
-    if info_json_paths:
-        with open(info_json_paths[0], "r", encoding="utf-8") as f:
-            info = json.load(f)
-
-    title = info.get("title", "Untitled Recipe")
-    description = info.get("description", "")
-    thumbnail_url = info.get("thumbnail", "")
-
-    # Try to find subtitle/transcript file
-    transcript = ""
+    sub_res = subprocess.run(sub_cmd, capture_output=True, text=True, timeout=15)
     sub_files = list(Path(tmpdir).glob("*.vtt")) + \
                 list(Path(tmpdir).glob("*.srt")) + \
                 list(Path(tmpdir).glob("*.json3"))
@@ -105,17 +179,20 @@ def fetch_video_info(url: str, tmpdir: str) -> dict:
         transcript = parse_subtitle_file(sub_files[0])
         print(f"✅  Found subtitles: {sub_files[0].name}")
     else:
-        print("⚠️   No subtitles found — falling back to audio transcription...")
-        audio_info = fetch_via_audio(url, tmpdir)
-        transcript = audio_info.get("transcript", "")
-
-    if not transcript and description:
-        print("ℹ️   Using video description as fallback context.")
-        transcript = description
+        # Fallback to audio if no subtitles and description is very short
+        if not description or len(description) < 40:
+            print("⚠️   No subtitles or caption details found — falling back to audio transcription...")
+            audio_info = fetch_via_audio(url, tmpdir)
+            transcript = audio_info.get("transcript", "")
 
     return {
         "title": title,
+        "uploader": uploader,
+        "channel": channel,
+        "caption": description,
         "description": description,
+        "comments_text": comments_text,
+        "comments_raw": comments_raw,
         "transcript": transcript,
         "thumbnail_url": thumbnail_url,
         "source_url": url,
@@ -215,36 +292,38 @@ def fetch_via_audio(url: str, tmpdir: str) -> dict:
 # ─────────────────────────────────────────────
 
 RECIPE_PROMPT = """
-You are a professional recipe analyst. I will give you the transcript and title of a cooking video.
+You are a professional recipe analyst and culinary intelligence agent.
+I will give you comprehensive information from a cooking video (YouTube Short or Instagram Reel), including the video title, creator/channel, post caption, comments (especially pinned or creator comments), and audio/subtitles transcript.
+
 Extract ALL recipe information and return it as a valid JSON object with EXACTLY this structure:
 
 {
   "recipe_name": "Name of the dish",
-  "cuisine_type": "e.g. Italian, Indian, Mexican, etc.",
-  "servings": "e.g. 2-4 servings",
-  "prep_time": "e.g. 15 minutes (or null if not mentioned)",
-  "cook_time": "e.g. 30 minutes (or null if not mentioned)",
+  "cuisine_type": "e.g. Italian, Indian, Mexican, Fusion, etc.",
+  "servings": "e.g. 2 servings (or 2-4 servings)",
+  "prep_time": "e.g. 10 minutes (or null if not mentioned)",
+  "cook_time": "e.g. 15 minutes (or null if not mentioned)",
   "difficulty": "Easy | Medium | Hard",
-  "description": "A 2-3 sentence description of this dish",
+  "description": "A 2-3 sentence description of this dish highlighting flavors, texture, and key characteristics",
   "ingredients": [
     {
       "name": "ingredient name",
-      "quantity": "amount + unit, e.g. 2 cups",
-      "note": "optional preparation note, e.g. finely chopped (or empty string)"
+      "quantity": "amount + unit, e.g. 2 cups, 100g, 1 tsp",
+      "note": "optional preparation note, e.g. finely chopped, crumbled, boiled (or empty string)"
     }
   ],
   "tools": [
     {
-      "name": "tool or equipment name",
+      "name": "tool or equipment name, e.g. Non-stick Pan, Air Fryer, Blender, Knife",
       "purpose": "brief description of why it is needed"
     }
   ],
   "steps": [
     {
       "step_number": 1,
-      "title": "Short step title, e.g. Marinate the chicken",
+      "title": "Short step title",
       "instruction": "Detailed instruction for this step",
-      "duration": "Time for this step, e.g. 10 minutes (or empty string if not applicable)"
+      "duration": "Time for this step (or empty string)"
     }
   ],
   "tips": [
@@ -254,38 +333,59 @@ Extract ALL recipe information and return it as a valid JSON object with EXACTLY
   "tags": ["tag1", "tag2"]
 }
 
-Rules:
-- Be thorough. Extract every ingredient with quantity if mentioned.
-- If quantities are not mentioned, make reasonable estimates and note them.
-- Tools include bowls, pans, knives, blenders, etc.
-- Tips can come from the chef's commentary or best practices.
-- If any field cannot be determined, use null or an empty array.
-- RETURN ONLY THE JSON OBJECT. No markdown, no explanation, just the JSON.
+Critical Extraction Rules:
+1. CAPTION & COMMENTS PRIORITY:
+   - On Instagram and YouTube Shorts, creators frequently put the full ingredient list with exact quantities (grams, tablespoons, teaspoons, cups, slices) and step-by-step notes in the **Post Caption** or in the **Comments** (specifically comments made by the uploader or pinned comments).
+   - Thoroughly examine the **Post Caption** and all **Comments** first for explicit ingredient names, exact measurements, sauces, seasonings, and instructions.
+   - Do NOT invent or estimate generic ingredients if specific ingredients or measurements are already stated in the caption or comments.
+2. COMPLETENESS:
+   - If any field cannot be determined, use null or an empty array.
+   - RETURN ONLY THE JSON OBJECT. No markdown, no explanation, just the JSON.
 
-Video Title: __TITLE__
-
-Transcript:
-__TRANSCRIPT__
+Cooking Video & Post Information:
+__CONTEXT__
 """
 
 GEMINI_MODELS = [
+    "gemini-flash-lite-latest",
     "gemini-3.5-flash-lite",
     "gemini-3.5-flash",
     "gemini-3.6-flash",
-    "gemini-flash-lite-latest",
     "gemini-3.8-flash",
     "gemini-3.7-flash",
 ]
 
 
 def extract_recipe_with_gemini(video_info: dict) -> dict:
-    """Send transcript to Gemini and extract structured recipe data."""
+    """Send post caption, comments, transcript, and metadata to Gemini and extract structured recipe data."""
     print("🤖  Sending to Gemini for recipe extraction...")
+
+    title = str(video_info.get("title", "Untitled Recipe"))
+    uploader = str(video_info.get("uploader", "")).strip()
+    channel = str(video_info.get("channel", "")).strip()
+    caption = (video_info.get("caption") or video_info.get("description") or "").strip()
+    comments_text = (video_info.get("comments_text") or "").strip()
+    transcript = (video_info.get("transcript") or "").strip()
+
+    context_sections = []
+    context_sections.append(f"Video Title: {title}")
+    if uploader or channel:
+        context_sections.append(f"Creator / Channel: {uploader} ({channel})")
+
+    if caption:
+        context_sections.append(f"\n--- POST CAPTION / DESCRIPTION ---\n{caption}")
+
+    if comments_text:
+        context_sections.append(f"\n--- COMMENTS & PINNED RECIPE DETAILS ---\n{comments_text}")
+
+    if transcript and transcript != caption:
+        context_sections.append(f"\n--- AUDIO / SUBTITLE TRANSCRIPT ---\n{transcript[:6000]}")
+
+    full_context_text = "\n".join(context_sections)
 
     prompt = (
         RECIPE_PROMPT
-        .replace("__TITLE__", str(video_info.get("title", "Untitled Recipe")))
-        .replace("__TRANSCRIPT__", str(video_info.get("transcript", ""))[:12000])
+        .replace("__CONTEXT__", full_context_text[:15000])
     )
 
     raw = None

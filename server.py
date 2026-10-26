@@ -113,6 +113,26 @@ def extract_captions_from_info(info: dict) -> str:
     return ""
 
 
+def get_cookie_args() -> list:
+    """Return yt-dlp cookie arguments if configured in environment or project folder."""
+    # Check for direct cookies.txt path in env
+    cookies_path = os.getenv("INSTAGRAM_COOKIES_PATH") or os.getenv("COOKIES_PATH")
+    if cookies_path and os.path.exists(cookies_path):
+        return ["--cookies", cookies_path]
+
+    # Check default cookies.txt in project root
+    default_cookie_file = Path(__file__).parent / "cookies.txt"
+    if default_cookie_file.exists():
+        return ["--cookies", str(default_cookie_file)]
+
+    # Check browser cookies
+    browser = os.getenv("INSTAGRAM_BROWSER") or os.getenv("BROWSER_COOKIES")
+    if browser:
+        return ["--cookies-from-browser", browser]
+
+    return []
+
+
 def get_yt_dlp_bin() -> str:
     local_bin = Path(__file__).parent / ".venv" / "bin" / "yt-dlp"
     if local_bin.exists():
@@ -123,22 +143,87 @@ def get_yt_dlp_bin() -> str:
     return "yt-dlp"
 
 
-def fetch_video_info(url: str, tmpdir: str) -> dict:
-    """Use yt-dlp to fetch video metadata, video file + subtitles/description."""
+def fetch_video_info(url: str, tmpdir: str, custom_notes: str = "") -> dict:
+    """Use yt-dlp to fetch video metadata, video file, subtitles, caption, and comments."""
     yt_dlp_bin = get_yt_dlp_bin()
+    cookie_args = get_cookie_args()
 
-    # Step 1: ALWAYS fetch metadata via --dump-json (never fails on 429 subtitle errors or format issues)
-    cmd_meta = [str(yt_dlp_bin), "--dump-json", "--no-warnings", url]
-    res_meta = subprocess.run(cmd_meta, capture_output=True, text=True, timeout=25)
+    # Step 1: ALWAYS fetch metadata via --dump-json with comments (never fails on 429 subtitle errors or format issues)
+    cmd_meta = [str(yt_dlp_bin), "--dump-json", "--no-warnings", "--write-comments"] + cookie_args + [url]
+    res_meta = subprocess.run(cmd_meta, capture_output=True, text=True, timeout=30)
     info = {}
     if res_meta.returncode == 0 and res_meta.stdout.strip():
-        try:
-            info = json.loads(res_meta.stdout)
-        except Exception:
-            pass
+        # Handle cases where warnings might appear before json
+        for line in res_meta.stdout.strip().split("\n"):
+            line = line.strip()
+            if line.startswith("{") and line.endswith("}"):
+                try:
+                    info = json.loads(line)
+                    break
+                except Exception:
+                    pass
 
     title       = info.get("title", "Untitled Recipe")
-    description = info.get("description", "")
+    description = (info.get("description") or "").strip()
+    uploader    = (info.get("uploader") or "").strip()
+    channel     = (info.get("channel") or "").strip()
+    comments_raw = info.get("comments") or []
+
+    # Parse and structure comments
+    uploader_comments = []
+    recipe_comments = []
+    other_comments = []
+
+    recipe_keywords = [
+        "recipe", "ingredient", "ingredients", "measure", "tsp", "tbsp", "tablespoon", "teaspoon",
+        "cup", "cups", "gram", "grams", "gms", "g ", "kg", "pinch", "boiled", "chopped", "crumbled",
+        "method", "step", "instruction", "bake", "air fry", "fry", "servings", "sauce"
+    ]
+
+    uploader_lower = uploader.lower().replace(" ", "")
+    channel_lower = channel.lower().replace(" ", "")
+
+    for c in comments_raw:
+        if not isinstance(c, dict):
+            continue
+        author = (c.get("author") or "").strip()
+        author_lower = author.lower().replace(" ", "")
+        text = (c.get("text") or "").strip()
+        if not text:
+            continue
+
+        is_uploader = False
+        if channel_lower and (channel_lower in author_lower or author_lower in channel_lower):
+            is_uploader = True
+        elif uploader_lower and (uploader_lower in author_lower or author_lower in uploader_lower):
+            is_uploader = True
+        elif c.get("is_favorited") or c.get("is_pinned"):
+            is_uploader = True
+
+        entry = f"@{author}: {text}"
+        if is_uploader:
+            uploader_comments.append(entry)
+        elif any(k in text.lower() for k in recipe_keywords):
+            recipe_comments.append(entry)
+        else:
+            other_comments.append(entry)
+
+    formatted_comments_list = []
+    if uploader_comments:
+        formatted_comments_list.append("=== UPLOADER / PINNED COMMENTS ===")
+        formatted_comments_list.extend(uploader_comments)
+    if recipe_comments:
+        formatted_comments_list.append("=== COMMENTS MENTIONING RECIPES / INGREDIENTS ===")
+        formatted_comments_list.extend(recipe_comments[:15])
+    if other_comments and not uploader_comments and not recipe_comments:
+        formatted_comments_list.append("=== TOP COMMENTS ===")
+        formatted_comments_list.extend(other_comments[:10])
+
+    if custom_notes and custom_notes.strip():
+        formatted_comments_list.append("=== USER-PROVIDED RECIPE NOTES / PINNED COMMENT ===")
+        formatted_comments_list.append(custom_notes.strip())
+
+    comments_text = "\n".join(formatted_comments_list)
 
     # Thumbnail: prefer highest resolution
     thumbnail_url = ""
@@ -172,13 +257,6 @@ def fetch_video_info(url: str, tmpdir: str) -> dict:
         except Exception as e:
             print(f"[subtitles warning]: {e}")
 
-    # Fallback to description if no subtitles (or combine if description has ingredients)
-    if not transcript or len(transcript.strip()) < 30:
-        if description:
-            transcript = description
-    elif description and len(description) > len(transcript):
-        transcript = transcript + "\n\n" + description
-
     # Step 3: Download video stream for frame extraction and playback
     # Format selector works on both landscape and portrait (Shorts/Reels) without needing ffmpeg
     cmd_vid = [
@@ -189,7 +267,7 @@ def fetch_video_info(url: str, tmpdir: str) -> dict:
         "-o", f"{tmpdir}/video.%(ext)s",
         url,
     ]
-    subprocess.run(cmd_vid, capture_output=True, text=True, timeout=40)
+    subprocess.run(cmd_vid, capture_output=True, text=True, timeout=45)
 
     # Find downloaded video file
     video_files = [
@@ -199,12 +277,20 @@ def fetch_video_info(url: str, tmpdir: str) -> dict:
     video_path = video_files[0] if video_files else None
     print(f"[video_file]: {video_path}")
     print(f"[info] Title: {title}")
+    print(f"[info] Creator: {uploader} ({channel})")
+    print(f"[info] Caption length: {len(description)} chars")
+    print(f"[info] Comments formatted: {len(comments_text)} chars ({len(comments_raw)} raw comments)")
     print(f"[info] Transcript length: {len(transcript)} chars")
     print(f"[info] Thumbnail: {thumbnail_url[:80]}")
 
     return {
         "title": title,
+        "uploader": uploader,
+        "channel": channel,
+        "caption": description,
         "description": description,
+        "comments_text": comments_text,
+        "comments_raw": comments_raw,
         "transcript": transcript,
         "thumbnail_url": thumbnail_url,
         "video_path": video_path,
@@ -378,28 +464,30 @@ def extract_visual_snippets(video_path: str, recipe_data: dict) -> dict:
 # ─────────────────────────────────────────────
 
 RECIPE_PROMPT = """
-You are a professional recipe analyst. I will give you the transcript and title of a cooking video.
+You are a professional recipe analyst and culinary intelligence agent.
+I will give you comprehensive information from a cooking video (YouTube Short or Instagram Reel), including the video title, creator/channel, post caption, comments (especially pinned or creator comments), and audio/subtitles transcript.
+
 Extract ALL recipe information and return it as a valid JSON object with EXACTLY this structure:
 
 {
   "recipe_name": "Name of the dish",
-  "cuisine_type": "e.g. Italian, Indian, Mexican, etc.",
-  "servings": "e.g. 2-4 servings",
-  "prep_time": "e.g. 15 minutes (or null if not mentioned)",
-  "cook_time": "e.g. 30 minutes (or null if not mentioned)",
+  "cuisine_type": "e.g. Italian, Indian, Mexican, Fusion, etc.",
+  "servings": "e.g. 2 servings (or 2-4 servings)",
+  "prep_time": "e.g. 10 minutes (or null if not mentioned)",
+  "cook_time": "e.g. 15 minutes (or null if not mentioned)",
   "difficulty": "Easy | Medium | Hard",
-  "description": "A 2-3 sentence description of this dish",
+  "description": "A 2-3 sentence description of this dish highlighting flavors, texture, and key characteristics",
   "ingredients": [
     {
       "name": "ingredient name",
-      "quantity": "amount + unit, e.g. 2 cups",
-      "note": "optional preparation note, e.g. finely chopped (or empty string)",
+      "quantity": "amount + unit, e.g. 2 cups, 100g, 1 tsp",
+      "note": "optional preparation note, e.g. finely chopped, crumbled, boiled (or empty string)",
       "timestamp_percent": 15
     }
   ],
   "tools": [
     {
-      "name": "tool or equipment name",
+      "name": "tool or equipment name, e.g. Non-stick Pan, Air Fryer, Blender, Knife",
       "purpose": "brief description of why it is needed"
     }
   ],
@@ -407,7 +495,7 @@ Extract ALL recipe information and return it as a valid JSON object with EXACTLY
     {
       "step_number": 1,
       "title": "Short step title",
-      "instruction": "Detailed instruction for this step",
+      "instruction": "Detailed instruction for this step including visual cues and techniques",
       "duration": "Time for this step (or empty string)",
       "timestamp_percent": 35
     }
@@ -416,19 +504,22 @@ Extract ALL recipe information and return it as a valid JSON object with EXACTLY
   "tags": ["tag1", "tag2"]
 }
 
-Rules:
-- Be thorough. Extract every ingredient with quantity if mentioned.
-- If quantities are not mentioned, make reasonable estimates and note them.
-- Tools include bowls, pans, knives, blenders, etc.
-- Tips can come from the chef's commentary or best practices.
-- For steps and ingredients, estimate timestamp_percent (0-100 approximate position in video). Ingredients appear early (5-35%), cooking steps throughout middle & end (25-90%).
-- If any field cannot be determined, use null or an empty array.
-- RETURN ONLY THE JSON OBJECT. No markdown, no explanation.
+Critical Extraction Rules:
+1. CAPTION & COMMENTS PRIORITY:
+   - On Instagram and YouTube Shorts, creators frequently put the full ingredient list with exact quantities (grams, tablespoons, teaspoons, cups, slices) and step-by-step notes in the **Post Caption** or in the **Comments** (specifically comments made by the uploader or pinned comments).
+   - Thoroughly examine the **Post Caption** and all **Comments** first for explicit ingredient names, exact measurements, sauces, seasonings, and instructions.
+   - Do NOT invent or estimate generic ingredients if specific ingredients or measurements are already stated in the caption or comments.
+2. VISUAL CROSS-REFERENCING:
+   - If video visuals are provided, cross-reference them with the caption/comments to verify steps, tools used (e.g., pan, air fryer, blender), and visual timestamps.
+   - For steps and ingredients, estimate timestamp_percent (0-100 approximate position in video). Ingredients appear early (5-35%), cooking steps throughout middle & end (25-90%).
+3. APPLIANCES & COOKING METHODS:
+   - If the recipe uses an Air Fryer, specify air fryer temperature (e.g. 180°C–200°C) and time. If it uses a pressure cooker, skillet, or oven, specify exact settings.
+4. COMPLETENESS:
+   - If any field cannot be determined, use null or an empty array.
+   - RETURN ONLY THE JSON OBJECT. No markdown code fences, no explanatory text outside the JSON.
 
-Video Title: __TITLE__
-
-Transcript:
-__TRANSCRIPT__
+Cooking Video & Post Information:
+__CONTEXT__
 """
 
 
@@ -445,67 +536,90 @@ GEMINI_MODELS = [
 
 
 def extract_recipe_with_gemini(video_info: dict) -> dict:
-    """Send transcript or uploaded video to Gemini and extract structured recipe data."""
+    """Send multimodal video visuals, post caption, comments, and transcript to Gemini to extract structured recipe data."""
     import time
 
+    title = str(video_info.get("title", "Untitled Recipe"))
+    uploader = str(video_info.get("uploader", "")).strip()
+    channel = str(video_info.get("channel", "")).strip()
+    caption = (video_info.get("caption") or video_info.get("description") or "").strip()
+    comments_text = (video_info.get("comments_text") or "").strip()
     transcript = (video_info.get("transcript") or "").strip()
     video_path = video_info.get("video_path")
-    file_ref = None
 
-    if len(transcript) >= 25:
-        prompt = (
-            RECIPE_PROMPT
-            .replace("__TITLE__", str(video_info.get("title", "Untitled Recipe")))
-            .replace("__TRANSCRIPT__", transcript[:12000])
-        )
-        content_payload = prompt
-    elif video_path and os.path.exists(video_path):
-        print("[gemini] No transcript found. Uploading video directly for multimodal analysis...")
+    # Build comprehensive context payload
+    context_sections = []
+    context_sections.append(f"Video Title: {title}")
+    if uploader or channel:
+        context_sections.append(f"Creator / Channel: {uploader} ({channel})")
+
+    if caption:
+        context_sections.append(f"\n--- POST CAPTION / DESCRIPTION ---\n{caption}")
+
+    if comments_text:
+        context_sections.append(f"\n--- COMMENTS & PINNED RECIPE DETAILS ---\n{comments_text}")
+
+    if transcript and transcript != caption:
+        context_sections.append(f"\n--- AUDIO / SUBTITLE TRANSCRIPT ---\n{transcript[:6000]}")
+
+    full_context_text = "\n".join(context_sections)
+
+    prompt = (
+        RECIPE_PROMPT
+        .replace("__CONTEXT__", full_context_text[:15000])
+    )
+
+    file_ref = None
+    if video_path and os.path.exists(video_path):
+        print(f"[gemini] Uploading video for multimodal analysis: {video_path}")
         try:
             file_ref = client.files.upload(file=video_path)
-            print(f"[gemini] Video uploaded: {file_ref.name}")
+            # Wait for file processing to complete
+            for _ in range(30):
+                file_status = client.files.get(name=file_ref.name)
+                if file_status.state.name == "ACTIVE":
+                    break
+                elif file_status.state.name == "FAILED":
+                    print("[gemini] Video processing failed on Gemini server.")
+                    file_ref = None
+                    break
+                time.sleep(1)
+            if file_ref:
+                print(f"[gemini] Video uploaded and active: {file_ref.name}")
         except Exception as ue:
             print(f"[gemini] File upload error: {ue}")
             file_ref = None
 
-        prompt = (
-            RECIPE_PROMPT
-            .replace("__TITLE__", str(video_info.get("title", "Untitled Recipe")))
-            .replace("__TRANSCRIPT__", "Observe the video visuals, listen to commentary, and read any on-screen text to identify all ingredients, quantities, tools, and step-by-step instructions.")
-        )
-        content_payload = [file_ref, prompt] if file_ref else prompt
+    if file_ref:
+        content_payload = [file_ref, prompt]
     else:
-        prompt = (
-            RECIPE_PROMPT
-            .replace("__TITLE__", str(video_info.get("title", "Untitled Recipe")))
-            .replace("__TRANSCRIPT__", f"Video Title: {video_info.get('title')}. Estimate standard recipe details.")
-        )
         content_payload = prompt
 
     last_error = None
     raw = None
-    for model in GEMINI_MODELS:
-        try:
-            print(f"[gemini] Trying model: {model}")
-            response = client.models.generate_content(
-                model=model,
-                contents=content_payload,
-            )
-            raw = response.text.strip()
-            print(f"[gemini] Success with {model}, response len: {len(raw)}")
-            break
-        except Exception as e:
-            print(f"[gemini] {model} failed: {str(e)[:120]}")
-            last_error = e
-            time.sleep(1)
-            continue
-
-    # Clean up uploaded file reference
-    if file_ref:
-        try:
-            client.files.delete(name=file_ref.name)
-        except Exception:
-            pass
+    try:
+        for model in GEMINI_MODELS:
+            try:
+                print(f"[gemini] Trying model: {model}")
+                response = client.models.generate_content(
+                    model=model,
+                    contents=content_payload,
+                )
+                raw = response.text.strip()
+                print(f"[gemini] Success with {model}, response len: {len(raw)}")
+                break
+            except Exception as e:
+                print(f"[gemini] {model} failed: {str(e)[:120]}")
+                last_error = e
+                time.sleep(1)
+                continue
+    finally:
+        # Clean up uploaded file reference
+        if file_ref:
+            try:
+                client.files.delete(name=file_ref.name)
+            except Exception:
+                pass
 
     if raw is None:
         raise RuntimeError(f"All Gemini models failed. Last error: {last_error}")
@@ -525,7 +639,7 @@ def extract_recipe_with_gemini(video_info: dict) -> dict:
         print(f"[json] Parse error: {e}\nRaw snippet: {cleaned[:300]}")
         return {
             "recipe_name": video_info["title"],
-            "description": video_info.get("description", "")[:300],
+            "description": caption[:300] if caption else transcript[:300],
             "ingredients": [],
             "tools": [],
             "steps": [],
@@ -727,8 +841,9 @@ def remove_recipe(recipe_id):
 
 @app.route("/api/extract", methods=["POST"])
 def extract():
-    data = request.get_json()
-    url = (data or {}).get("url", "").strip()
+    data = request.get_json() or {}
+    url = data.get("url", "").strip()
+    notes = data.get("notes", "").strip()
 
     if not url:
         return jsonify({"error": "No URL provided"}), 400
@@ -742,7 +857,7 @@ def extract():
 
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
-            video_info = fetch_video_info(url, tmpdir)
+            video_info = fetch_video_info(url, tmpdir, custom_notes=notes)
 
             if not video_info.get("transcript") and not video_info.get("video_path"):
                 return jsonify({
