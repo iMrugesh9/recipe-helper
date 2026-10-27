@@ -11,11 +11,13 @@ Recipe Helper Agent is a full-stack, AI-powered culinary companion and digital c
                     LOCAL MACHINE (Private & Heavy Work)
 ┌────────────────────────────────────────────────────────────────────────┐
 │  • Flask Web Server (http://localhost:8080 & http://<LAN_IP>:8080)     │
+│  • 3-Tab Web App (Extract Recipe, Saved Recipes, Grocery / To-Do)      │
+│  • Persistent Grocery Engine (data/grocery.json & /api/grocery REST)   │
 │  • yt-dlp Video & Subtitle Extractor (Direct signed URL parsing)       │
 │  • OpenCV Keyframe Extraction (Laplacian variance sharpness filtering) │
 │  • Google Gemini AI Client (Private API key, multimodal video fallback)│
 │  • Local Video Player & MP4 Storage (static/videos/<id>.mp4)          │
-│  • Local Storage (data/recipes.json)                                   │
+│  • Local Database (data/recipes.json)                                  │
 │  • Batch Agent (batch_agent.py) for bulk URL/CSV extractions           │
 │  • Desktop Controller (manage_server.sh & start_server.desktop)        │
 └──────────────────────────────────┬─────────────────────────────────────┘
