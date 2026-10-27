@@ -774,6 +774,45 @@ def delete_recipe(recipe_id: str) -> bool:
 
 
 # ─────────────────────────────────────────────
+# Grocery Checklist Persistence & Operations
+# ─────────────────────────────────────────────
+GROCERY_FILE = Path(__file__).parent / "data" / "grocery.json"
+
+def load_grocery_list() -> dict:
+    """Load grocery checklist from JSON storage."""
+    if not GROCERY_FILE.exists():
+        return {"items": [], "updated_at": None}
+    try:
+        with open(GROCERY_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                return {"items": data, "updated_at": None}
+            if not isinstance(data, dict):
+                return {"items": [], "updated_at": None}
+            if "items" not in data or not isinstance(data["items"], list):
+                data["items"] = []
+            return data
+    except Exception as e:
+        print(f"[grocery] Load error: {e}")
+        return {"items": [], "updated_at": None}
+
+
+def save_grocery_list(data: dict) -> bool:
+    """Save grocery checklist atomically to JSON storage."""
+    try:
+        GROCERY_FILE.parent.mkdir(parents=True, exist_ok=True)
+        data["updated_at"] = datetime.now().isoformat()
+        temp_file = GROCERY_FILE.with_suffix(".tmp")
+        with open(temp_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        temp_file.replace(GROCERY_FILE)
+        return True
+    except Exception as e:
+        print(f"[grocery] Save error: {e}")
+        return False
+
+
+# ─────────────────────────────────────────────
 # Flask Routes
 # ─────────────────────────────────────────────
 
@@ -837,6 +876,176 @@ def remove_recipe(recipe_id):
     """Delete a recipe by ID."""
     success = delete_recipe(recipe_id)
     return jsonify({"success": success})
+
+
+# ─────────────────────────────────────────────
+# Grocery Checklist API Endpoints
+# ─────────────────────────────────────────────
+
+@app.route("/api/grocery", methods=["GET"])
+def get_grocery_list():
+    """Retrieve full grocery checklist."""
+    data = load_grocery_list()
+    return jsonify(data)
+
+
+@app.route("/api/grocery/item", methods=["POST"])
+def add_grocery_item():
+    """Add a single item manually to the grocery checklist."""
+    payload = request.get_json() or {}
+    name = (payload.get("name") or "").strip()
+    if not name:
+        return jsonify({"error": "Item name is required"}), 400
+
+    quantity = (payload.get("quantity") or "").strip()
+    note = (payload.get("note") or "").strip()
+    recipe_id = (payload.get("recipe_id") or "").strip()
+    recipe_title = (payload.get("recipe_title") or "Manual / Custom").strip()
+    category = (payload.get("category") or "General").strip()
+
+    import time
+    item_id = f"g_{int(time.time()*1000)}_{os.urandom(3).hex()}"
+    new_item = {
+        "id": item_id,
+        "name": name,
+        "quantity": quantity,
+        "note": note,
+        "checked": False,
+        "recipe_id": recipe_id,
+        "recipe_title": recipe_title,
+        "category": category,
+        "created_at": datetime.now().isoformat()
+    }
+
+    data = load_grocery_list()
+    data["items"].insert(0, new_item)
+    save_grocery_list(data)
+    return jsonify({"success": True, "item": new_item, "items": data["items"]})
+
+
+@app.route("/api/grocery/item/<item_id>", methods=["PATCH"])
+def update_grocery_item(item_id):
+    """Toggle checked status or edit item properties."""
+    payload = request.get_json() or {}
+    data = load_grocery_list()
+    target = None
+    for item in data.get("items", []):
+        if item.get("id") == item_id:
+            target = item
+            break
+
+    if not target:
+        return jsonify({"error": "Item not found"}), 404
+
+    if "checked" in payload:
+        target["checked"] = bool(payload["checked"])
+    if "name" in payload and str(payload["name"]).strip():
+        target["name"] = str(payload["name"]).strip()
+    if "quantity" in payload:
+        target["quantity"] = str(payload["quantity"]).strip()
+    if "note" in payload:
+        target["note"] = str(payload["note"]).strip()
+
+    save_grocery_list(data)
+    return jsonify({"success": True, "item": target, "items": data["items"]})
+
+
+@app.route("/api/grocery/item/<item_id>", methods=["DELETE"])
+def delete_grocery_item(item_id):
+    """Delete a single grocery item by ID."""
+    data = load_grocery_list()
+    initial_count = len(data.get("items", []))
+    data["items"] = [i for i in data.get("items", []) if i.get("id") != item_id]
+    if len(data["items"]) != initial_count:
+        save_grocery_list(data)
+    return jsonify({"success": True, "items": data["items"]})
+
+
+@app.route("/api/grocery/import", methods=["POST"])
+def import_grocery_items():
+    """Import ingredients from a recipe into the grocery checklist."""
+    payload = request.get_json() or {}
+    recipe_id = (payload.get("recipe_id") or "").strip()
+    recipe_title = (payload.get("recipe_title") or "").strip()
+    ingredients = payload.get("ingredients") or []
+    mode = payload.get("mode", "append")  # "append" or "replace"
+
+    # If ingredients not passed directly, look up recipe from recipes.json
+    if not ingredients and recipe_id:
+        recipes = load_recipes()
+        for r in recipes:
+            if r.get("id") == recipe_id:
+                recipe_title = recipe_title or r.get("recipe", {}).get("recipe_name", "Recipe")
+                ingredients = r.get("recipe", {}).get("ingredients", [])
+                break
+
+    if not ingredients:
+        return jsonify({"error": "No ingredients found to import"}), 400
+
+    import time
+    data = load_grocery_list()
+    if mode == "replace":
+        data["items"] = []
+
+    added = []
+    base_time = int(time.time() * 1000)
+    for idx, ing in enumerate(ingredients):
+        if isinstance(ing, str):
+            name = ing.strip()
+            qty = ""
+            note = ""
+        elif isinstance(ing, dict):
+            name = (ing.get("name") or "").strip()
+            qty = (ing.get("quantity") or "").strip()
+            note = (ing.get("note") or "").strip()
+        else:
+            continue
+
+        if not name:
+            continue
+
+        item = {
+            "id": f"g_{base_time}_{idx}_{os.urandom(2).hex()}",
+            "name": name,
+            "quantity": qty,
+            "note": note,
+            "checked": False,
+            "recipe_id": recipe_id,
+            "recipe_title": recipe_title or "Imported Recipe",
+            "created_at": datetime.now().isoformat()
+        }
+        data["items"].append(item)
+        added.append(item)
+
+    save_grocery_list(data)
+    return jsonify({"success": True, "imported_count": len(added), "items": data["items"]})
+
+
+@app.route("/api/grocery/clear", methods=["POST", "DELETE"])
+def clear_grocery_list():
+    """Clear whole checklist or just completed items."""
+    payload = request.get_json(silent=True) or {}
+    mode = payload.get("mode", "all")  # "all" or "completed"
+    data = load_grocery_list()
+    if mode == "completed":
+        data["items"] = [i for i in data.get("items", []) if not i.get("checked")]
+    else:
+        data["items"] = []
+    save_grocery_list(data)
+    return jsonify({"success": True, "items": data["items"]})
+
+
+@app.route("/api/grocery/sync", methods=["POST", "PUT"])
+def sync_full_grocery_list():
+    """Bulk replace or sync full grocery list state."""
+    payload = request.get_json() or {}
+    items = payload.get("items", [])
+    if not isinstance(items, list):
+        return jsonify({"error": "Invalid items format"}), 400
+
+    data = {"items": items, "updated_at": datetime.now().isoformat()}
+    save_grocery_list(data)
+    return jsonify({"success": True, "items": data["items"]})
 
 
 @app.route("/api/extract", methods=["POST"])

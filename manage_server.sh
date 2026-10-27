@@ -19,7 +19,7 @@ get_pid() {
     fi
   fi
   local p
-  p=$(pgrep -f "python.*server\.py" | head -n 1)
+  p=$(pgrep -f "personal-ai.*server\.py" | head -n 1)
   if [ -n "$p" ]; then
     echo "$p"
     return 0

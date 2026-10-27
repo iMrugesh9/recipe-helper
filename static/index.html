@@ -1791,6 +1791,602 @@
       color: white;
     }
 
+    /* ── Grocery / To-Do Checklist Styling ──── */
+    .grocery-summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+    .grocery-stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 14px;
+    }
+    .grocery-stat-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .grocery-stat-box.accent .grocery-stat-num { color: var(--accent2); }
+    .grocery-stat-box.green .grocery-stat-num { color: #4ade80; }
+    .grocery-stat-num {
+      font-size: 26px;
+      font-weight: 800;
+      color: white;
+      line-height: 1.1;
+    }
+    .grocery-stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .grocery-progress-bar-bg {
+      background: rgba(255,255,255,0.06);
+      height: 8px;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 18px;
+    }
+    .grocery-progress-bar-fill {
+      background: linear-gradient(90deg, var(--accent), #4ade80);
+      height: 100%;
+      width: 0%;
+      border-radius: 99px;
+      transition: width 0.35s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    .grocery-actions-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .grocery-add-form {
+      width: 100%;
+    }
+    .grocery-add-inputs {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .grocery-input-group {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .grocery-input-group.name-group {
+      flex: 2;
+      min-width: 220px;
+    }
+    .grocery-input-group.qty-group {
+      flex: 1;
+      min-width: 150px;
+    }
+    .grocery-input-icon {
+      position: absolute;
+      left: 14px;
+      font-size: 14px;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .grocery-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px 12px 38px;
+      color: white;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .grocery-input:focus {
+      border-color: var(--accent);
+      background: rgba(22, 28, 46, 0.95);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .btn-grocery-add-item {
+      background: var(--accent);
+      color: white;
+      border: none;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 12px 22px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+      white-space: nowrap;
+    }
+    .btn-grocery-add-item:hover {
+      background: #e85520;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    .grocery-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .grocery-filter-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .grocery-filter-pill {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 99px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .grocery-filter-pill:hover {
+      color: white;
+      border-color: var(--border2);
+      background: rgba(255,255,255,0.04);
+    }
+    .grocery-filter-pill.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent2);
+    }
+    .grocery-action-btns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-grocery-tool {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-grocery-tool:hover {
+      border-color: var(--accent2);
+      color: white;
+      background: rgba(255,255,255,0.06);
+    }
+    .btn-danger-tool:hover {
+      border-color: #ef4444;
+      color: #f87171;
+      background: rgba(239,68,68,0.12);
+    }
+
+    /* Checklist Groups & Items */
+    .grocery-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .grocery-empty-card {
+      background: var(--surface);
+      border: 1px dashed var(--border2);
+      border-radius: var(--radius-lg);
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .grocery-empty-icon {
+      font-size: 44px;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .grocery-empty-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 6px;
+    }
+    .grocery-empty-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 440px;
+      margin: 0 auto 20px;
+      line-height: 1.5;
+    }
+    .grocery-empty-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .grocery-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.2);
+    }
+    .grocery-group-head {
+      background: rgba(22,28,46,0.6);
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .grocery-group-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .grocery-group-badge {
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.08);
+      color: var(--text-muted);
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .grocery-items-list {
+      list-style: none;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .grocery-item-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.18s cubic-bezier(0.16,1,0.3,1);
+      user-select: none;
+    }
+    .grocery-item-row:hover {
+      background: var(--surface2);
+      border-color: var(--border);
+    }
+    .grocery-item-row.checked {
+      opacity: 0.52;
+    }
+    .grocery-item-row.checked:hover {
+      opacity: 0.8;
+    }
+    .grocery-checkbox {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 13px;
+      font-weight: 900;
+      color: white;
+      transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+      background: var(--surface2);
+    }
+    .grocery-item-row:hover .grocery-checkbox {
+      border-color: var(--accent);
+    }
+    .grocery-item-row.checked .grocery-checkbox {
+      background: #22c55e;
+      border-color: #22c55e;
+      box-shadow: 0 0 10px rgba(34,197,94,0.35);
+    }
+    .grocery-item-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .grocery-item-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      transition: color 0.2s;
+    }
+    .grocery-item-row.checked .grocery-item-name {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+    .grocery-item-qty {
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(255,107,53,0.12);
+      color: var(--accent2);
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,107,53,0.25);
+    }
+    .grocery-item-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .btn-delete-grocery-row {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 15px;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.4;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .grocery-item-row:hover .btn-delete-grocery-row {
+      opacity: 0.8;
+    }
+    .btn-delete-grocery-row:hover {
+      opacity: 1 !important;
+      background: rgba(239,68,68,0.15);
+      color: #ef4444;
+    }
+
+    /* Export Button in Recipe Details */
+    .btn-export-grocery {
+      background: linear-gradient(135deg, rgba(255,107,53,0.18), rgba(255,107,53,0.08));
+      border: 1px solid var(--accent);
+      color: var(--accent2);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-export-grocery:hover {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 14px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+    .try-again-grocery {
+      background: rgba(255,107,53,0.14);
+      border-color: var(--accent);
+      color: var(--accent2);
+    }
+    .try-again-grocery:hover {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-grocery-add:hover {
+      border-color: var(--accent);
+      color: var(--accent2);
+      background: rgba(255,107,53,0.15);
+    }
+
+    /* Modal for Recipe Import */
+    .recipe-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .recipe-modal-backdrop.active {
+      display: flex;
+      animation: modalFadeIn 0.25s cubic-bezier(0.16,1,0.3,1);
+    }
+    .recipe-modal-content {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 620px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+    .recipe-modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .recipe-modal-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .recipe-modal-icon {
+      font-size: 24px;
+    }
+    .recipe-modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 2px;
+    }
+    .recipe-modal-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .btn-close-modal {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-close-modal:hover {
+      border-color: white;
+      color: white;
+    }
+    .recipe-modal-search-wrap {
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .recipe-modal-list {
+      padding: 16px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+    .modal-recipe-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: all 0.2s;
+    }
+    .modal-recipe-card:hover {
+      border-color: var(--accent);
+      background: rgba(28,36,64,0.6);
+    }
+    .modal-recipe-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+    .modal-recipe-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #1e293b;
+    }
+    .modal-recipe-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .modal-recipe-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .modal-recipe-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .btn-modal-import {
+      background: var(--accent);
+      color: white;
+      border: none;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-modal-import:hover {
+      background: #e85520;
+    }
+    .btn-modal-replace {
+      background: rgba(255,255,255,0.08);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-modal-replace:hover {
+      border-color: var(--accent2);
+      color: white;
+    }
+    .recipe-modal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border);
+      background: rgba(15,20,32,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
     /* ── Responsive ──────────────────────────── */
     @media (max-width: 560px) {
       .glass-card { padding: 24px 20px 20px; }
@@ -1820,6 +2416,11 @@
         <span class="tab-icon">📚</span>
         <span class="tab-title">Saved Recipes</span>
         <span class="tab-badge" id="savedCountBadge">0</span>
+      </button>
+      <button class="nav-tab-btn" id="tabGroceryBtn" onclick="switchMainTab('grocery')">
+        <span class="tab-icon">🛒</span>
+        <span class="tab-title">Grocery / To-Do</span>
+        <span class="tab-badge" id="groceryCountBadge">0</span>
       </button>
     </div>
     <button class="btn-sync-gh" id="btnSyncGh" onclick="triggerManualSync()" title="Auto-syncs whenever recipes change. Click to compile & push to GitHub Pages.">
@@ -1928,6 +2529,7 @@
     <div class="try-again-bar">
       <button class="try-again-btn" onclick="resetForm()">← Extract Another Video</button>
       <button class="try-again-btn" onclick="switchMainTab('saved')">📚 View Saved Recipes</button>
+      <button class="try-again-btn try-again-grocery" onclick="exportCurrentRecipeToGrocery()">🛒 Add to Grocery List</button>
       <span class="generated-at" id="generatedAt"></span>
     </div>
 
@@ -1985,10 +2587,15 @@
     <div class="content-grid">
       <!-- Ingredients -->
       <div class="section-card">
-        <div class="section-head">
-          <div class="section-icon ico-orange">🧾</div>
-          <span class="section-title-text">Ingredients</span>
-          <span class="section-count-badge" id="ingCount">0</span>
+        <div class="section-head" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="section-icon ico-orange">🧾</div>
+            <span class="section-title-text">Ingredients</span>
+            <span class="section-count-badge" id="ingCount">0</span>
+          </div>
+          <button class="btn-export-grocery" onclick="exportCurrentRecipeToGrocery()" title="Export all ingredients from this recipe to your Grocery Checklist">
+            <span>🛒</span> <span>Export to Grocery List</span>
+          </button>
         </div>
         <div class="section-body">
           <div id="prepGalleryWrap" class="prep-gallery-wrap" style="display:none">
@@ -2176,6 +2783,102 @@
 
   </div><!-- /savedPane -->
 
+  <!-- ── TAB 3: GROCERY / TO-DO CHECKLIST ──────── -->
+  <div class="tab-pane" id="groceryPane">
+
+    <div class="saved-header">
+      <div class="logo-badge">🛒 &nbsp;Kitchen Assistant</div>
+      <h2 class="saved-title">Grocery & Shopping Checklist</h2>
+      <p class="saved-subtitle">Smart persistent checklist with memory. Import ingredients from any recipe, add manual items, check them off as you shop, and maintain state even after server restarts.</p>
+    </div>
+
+    <!-- Stats & Progress Bar -->
+    <div class="grocery-summary-card">
+      <div class="grocery-stats-row">
+        <div class="grocery-stat-box">
+          <span class="grocery-stat-num" id="groceryTotalCount">0</span>
+          <span class="grocery-stat-label">Total Items</span>
+        </div>
+        <div class="grocery-stat-box accent">
+          <span class="grocery-stat-num" id="groceryPendingCount">0</span>
+          <span class="grocery-stat-label">To Buy</span>
+        </div>
+        <div class="grocery-stat-box green">
+          <span class="grocery-stat-num" id="groceryDoneCount">0</span>
+          <span class="grocery-stat-label">Completed</span>
+        </div>
+        <div class="grocery-stat-box">
+          <span class="grocery-stat-num" id="groceryPercent">0%</span>
+          <span class="grocery-stat-label">Progress</span>
+        </div>
+      </div>
+      <div class="grocery-progress-bar-bg">
+        <div class="grocery-progress-bar-fill" id="groceryProgressFill" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <!-- Actions & Add Item Card -->
+    <div class="grocery-actions-card">
+      <!-- Manual Add Item Form -->
+      <form class="grocery-add-form" onsubmit="event.preventDefault(); addManualGroceryItem();">
+        <div class="grocery-add-inputs">
+          <div class="grocery-input-group name-group">
+            <span class="grocery-input-icon">✏️</span>
+            <input
+              type="text"
+              id="groceryItemNameInput"
+              class="grocery-input"
+              placeholder="Add item (e.g., Low-fat Paneer, 2 Avocados, Olive Oil)..."
+              required
+            />
+          </div>
+          <div class="grocery-input-group qty-group">
+            <span class="grocery-input-icon">⚖️</span>
+            <input
+              type="text"
+              id="groceryItemQtyInput"
+              class="grocery-input"
+              placeholder="Qty / Note (e.g., 250g, fresh)"
+            />
+          </div>
+          <button type="submit" class="btn-grocery-add-item" id="btnManualAddGrocery">
+            <span>＋</span> <span>Add Item</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Toolbar -->
+      <div class="grocery-toolbar">
+        <div class="grocery-filter-pills" id="groceryFilterPills">
+          <button class="grocery-filter-pill active" onclick="setGroceryFilter('all', this)">All (<span id="groceryCountAll">0</span>)</button>
+          <button class="grocery-filter-pill" onclick="setGroceryFilter('pending', this)">🛒 To Buy (<span id="groceryCountPending">0</span>)</button>
+          <button class="grocery-filter-pill" onclick="setGroceryFilter('completed', this)">✅ Checked (<span id="groceryCountCompleted">0</span>)</button>
+        </div>
+
+        <div class="grocery-action-btns">
+          <button class="btn-grocery-tool" onclick="openImportRecipeModal()" title="Import ingredients from your saved recipe collection">
+            <span>📥</span> <span>Import from Recipe</span>
+          </button>
+          <button class="btn-grocery-tool" onclick="copyGroceryListToClipboard()" title="Copy shopping checklist to clipboard">
+            <span>📋</span> <span>Copy List</span>
+          </button>
+          <button class="btn-grocery-tool" onclick="clearCompletedGroceryItems()" title="Clear checked/purchased items">
+            <span>🧹</span> <span>Clear Checked</span>
+          </button>
+          <button class="btn-grocery-tool btn-danger-tool" onclick="clearWholeGroceryList()" title="Clear all items in the grocery list">
+            <span>🗑️</span> <span>Clear Whole List</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active List Container -->
+    <div class="grocery-list-container" id="groceryListContainer">
+      <!-- Dynamically filled by renderGroceryList() -->
+    </div>
+
+  </div><!-- /groceryPane -->
+
 </div><!-- /page -->
 
 <script>
@@ -2190,20 +2893,31 @@
     currentMainTab = tab;
     const extractBtn = document.getElementById('tabExtractBtn');
     const savedBtn = document.getElementById('tabSavedBtn');
+    const groceryBtn = document.getElementById('tabGroceryBtn');
     const extractPane = document.getElementById('extractPane');
     const savedPane = document.getElementById('savedPane');
+    const groceryPane = document.getElementById('groceryPane');
+
+    // Reset active states
+    [extractBtn, savedBtn, groceryBtn].forEach(b => b && b.classList.remove('active'));
+    [extractPane, savedPane, groceryPane].forEach(p => {
+      if (p) {
+        p.style.display = 'none';
+        p.classList.remove('active');
+      }
+    });
 
     if (tab === 'extract') {
-      extractBtn.classList.add('active');
-      savedBtn.classList.remove('active');
-      extractPane.style.display = 'block';
-      savedPane.style.display = 'none';
-    } else {
-      savedBtn.classList.add('active');
-      extractBtn.classList.remove('active');
-      savedPane.style.display = 'block';
-      extractPane.style.display = 'none';
+      if (extractBtn) extractBtn.classList.add('active');
+      if (extractPane) { extractPane.style.display = 'block'; extractPane.classList.add('active'); }
+    } else if (tab === 'saved') {
+      if (savedBtn) savedBtn.classList.add('active');
+      if (savedPane) { savedPane.style.display = 'block'; savedPane.classList.add('active'); }
       fetchSavedRecipes();
+    } else if (tab === 'grocery') {
+      if (groceryBtn) groceryBtn.classList.add('active');
+      if (groceryPane) { groceryPane.style.display = 'block'; groceryPane.classList.add('active'); }
+      fetchGroceryList();
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -2640,6 +3354,9 @@
             <button class="btn-view-recipe" onclick="viewSavedRecipe('${item.id}')">
               <span>View Recipe</span> <span>➔</span>
             </button>
+            <button class="btn-icon-action btn-grocery-add" onclick="quickAddRecipeToGrocery('${item.id}', event)" title="Export ingredients to Grocery List">
+              🛒
+            </button>
             ${item.source_url ? `
               <a href="${item.source_url}" target="_blank" rel="noopener" class="btn-icon-action" title="Watch Original Video">
                 ▶
@@ -2861,7 +3578,569 @@
     changeRecipeDifficulty(recipeId, newDiff);
   }
 
-  function showToast(message) {
+  // ── Grocery / To-Do Checklist State & Logic ──────────
+  let groceryItems = [];
+  let currentGroceryFilter = 'all';
+  const GROCERY_CACHE_KEY = 'chef_ai_grocery_cache';
+
+  function saveGroceryToLocalStorage() {
+    try {
+      localStorage.setItem(GROCERY_CACHE_KEY, JSON.stringify({
+        items: groceryItems,
+        updated_at: new Date().toISOString()
+      }));
+    } catch (e) {
+      console.warn('LocalStorage error:', e);
+    }
+  }
+
+  function loadGroceryFromLocalStorage() {
+    try {
+      const raw = localStorage.getItem(GROCERY_CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed.items)) {
+          groceryItems = parsed.items;
+          updateGroceryStats();
+          renderGroceryList();
+        }
+      }
+    } catch (e) {
+      console.warn('LocalStorage load error:', e);
+    }
+  }
+
+  async function fetchGroceryList() {
+    // 1. Immediately render cached version if empty
+    if (groceryItems.length === 0) {
+      loadGroceryFromLocalStorage();
+    }
+
+    try {
+      const res = await fetch('/api/grocery');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.items)) {
+          groceryItems = data.items;
+          saveGroceryToLocalStorage();
+          updateGroceryStats();
+          renderGroceryList();
+        }
+      }
+    } catch (err) {
+      console.warn('Could not fetch grocery list from server, using local cache:', err);
+      updateGroceryStats();
+      renderGroceryList();
+    }
+  }
+
+  function updateGroceryStats() {
+    const total = groceryItems.length;
+    const completed = groceryItems.filter(i => i.checked).length;
+    const pending = total - completed;
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    // Badges
+    const navBadge = document.getElementById('groceryCountBadge');
+    if (navBadge) {
+      navBadge.textContent = pending;
+      navBadge.style.display = pending > 0 ? 'inline-block' : (total > 0 ? 'inline-block' : 'none');
+    }
+
+    const totalEl = document.getElementById('groceryTotalCount');
+    if (totalEl) totalEl.textContent = total;
+
+    const pendEl = document.getElementById('groceryPendingCount');
+    if (pendEl) pendEl.textContent = pending;
+
+    const doneEl = document.getElementById('groceryDoneCount');
+    if (doneEl) doneEl.textContent = completed;
+
+    const pctEl = document.getElementById('groceryPercent');
+    if (pctEl) pctEl.textContent = percent + '%';
+
+    const fillEl = document.getElementById('groceryProgressFill');
+    if (fillEl) fillEl.style.width = percent + '%';
+
+    // Filter counts
+    const fAll = document.getElementById('groceryCountAll');
+    if (fAll) fAll.textContent = total;
+
+    const fPend = document.getElementById('groceryCountPending');
+    if (fPend) fPend.textContent = pending;
+
+    const fComp = document.getElementById('groceryCountCompleted');
+    if (fComp) fComp.textContent = completed;
+  }
+
+  function setGroceryFilter(filter, btn) {
+    currentGroceryFilter = filter;
+    const pills = document.querySelectorAll('.grocery-filter-pill');
+    pills.forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderGroceryList();
+  }
+
+  function renderGroceryList() {
+    const container = document.getElementById('groceryListContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    let itemsToShow = groceryItems;
+    if (currentGroceryFilter === 'pending') {
+      itemsToShow = groceryItems.filter(i => !i.checked);
+    } else if (currentGroceryFilter === 'completed') {
+      itemsToShow = groceryItems.filter(i => i.checked);
+    }
+
+    if (itemsToShow.length === 0) {
+      if (groceryItems.length === 0) {
+        container.innerHTML = `
+          <div class="grocery-empty-card">
+            <span class="grocery-empty-icon">🛒</span>
+            <div class="grocery-empty-title">Your Grocery List is Empty</div>
+            <p class="grocery-empty-desc">Import ingredients directly from any of your recipes or manually add items above to start building your shopping checklist.</p>
+            <div class="grocery-empty-actions">
+              <button class="btn-grocery-add-item" onclick="openImportRecipeModal()">📥 Import from Recipe</button>
+              <button class="btn-grocery-tool" onclick="document.getElementById('groceryItemNameInput').focus()">✏️ Add Item</button>
+            </div>
+          </div>`;
+      } else {
+        container.innerHTML = `
+          <div class="grocery-empty-card">
+            <span class="grocery-empty-icon">🔍</span>
+            <div class="grocery-empty-title">No items match current filter</div>
+            <p class="grocery-empty-desc">You have no ${currentGroceryFilter === 'pending' ? 'uncompleted' : 'completed'} items right now.</p>
+            <div class="grocery-empty-actions">
+              <button class="btn-grocery-tool" onclick="setGroceryFilter('all', document.querySelector('.grocery-filter-pill'))">Show All Items</button>
+            </div>
+          </div>`;
+      }
+      return;
+    }
+
+    // Group items by recipe source
+    const groups = {};
+    itemsToShow.forEach(item => {
+      const key = item.recipe_title || 'Manual / Custom Items';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+
+    Object.keys(groups).forEach(groupTitle => {
+      const groupItems = groups[groupTitle];
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'grocery-group';
+
+      const isManual = groupTitle.includes('Manual') || groupTitle.includes('Custom');
+      const groupIcon = isManual ? '✏️' : '🍲';
+      const checkedInGroup = groupItems.filter(i => i.checked).length;
+
+      groupDiv.innerHTML = `
+        <div class="grocery-group-head">
+          <span class="grocery-group-title">
+            <span>${groupIcon}</span>
+            <span>${escHtml(groupTitle)}</span>
+          </span>
+          <span class="grocery-group-badge">${checkedInGroup}/${groupItems.length} checked</span>
+        </div>
+        <ul class="grocery-items-list" id="group-list-${escHtml(groupTitle.replace(/[^a-zA-Z0-9]/g, '_'))}"></ul>
+      `;
+
+      const ul = groupDiv.querySelector('ul');
+      groupItems.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'grocery-item-row' + (item.checked ? ' checked' : '');
+        li.id = 'grocery-item-' + item.id;
+        li.onclick = (e) => toggleGroceryItem(item.id, e);
+
+        li.innerHTML = `
+          <div class="grocery-checkbox" title="${item.checked ? 'Mark uncompleted' : 'Mark completed'}">
+            ${item.checked ? '✓' : ''}
+          </div>
+          <div class="grocery-item-info">
+            <span class="grocery-item-name">${escHtml(item.name)}</span>
+            ${item.quantity ? `<span class="grocery-item-qty">${escHtml(item.quantity)}</span>` : ''}
+            ${item.note ? `<span class="grocery-item-note">(${escHtml(item.note)})</span>` : ''}
+          </div>
+          <button class="btn-delete-grocery-row" onclick="deleteGroceryItem('${item.id}', event)" title="Remove this item">✕</button>
+        `;
+        ul.appendChild(li);
+      });
+
+      container.appendChild(groupDiv);
+    });
+  }
+
+  async function toggleGroceryItem(itemId, event) {
+    if (event) event.stopPropagation();
+    const item = groceryItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    item.checked = !item.checked;
+
+    // Instant DOM update
+    const row = document.getElementById('grocery-item-' + itemId);
+    if (row) {
+      if (item.checked) {
+        row.classList.add('checked');
+        const cb = row.querySelector('.grocery-checkbox');
+        if (cb) cb.textContent = '✓';
+      } else {
+        row.classList.remove('checked');
+        const cb = row.querySelector('.grocery-checkbox');
+        if (cb) cb.textContent = '';
+      }
+    }
+
+    updateGroceryStats();
+    saveGroceryToLocalStorage();
+
+    // Persist to server API
+    try {
+      await fetch('/api/grocery/item/' + encodeURIComponent(itemId), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checked: item.checked })
+      });
+    } catch (err) {
+      console.warn('Network sync error (cached locally):', err);
+    }
+  }
+
+  async function addManualGroceryItem() {
+    const nameInput = document.getElementById('groceryItemNameInput');
+    const qtyInput = document.getElementById('groceryItemQtyInput');
+    const name = nameInput ? nameInput.value.trim() : '';
+    const qty = qtyInput ? qtyInput.value.trim() : '';
+
+    if (!name) return;
+
+    // Optimistic item
+    const tempId = 'g_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+    const newItem = {
+      id: tempId,
+      name: name,
+      quantity: qty,
+      note: '',
+      checked: false,
+      recipe_id: '',
+      recipe_title: 'Manual / Custom Items',
+      created_at: new Date().toISOString()
+    };
+
+    groceryItems.unshift(newItem);
+    if (nameInput) nameInput.value = '';
+    if (qtyInput) qtyInput.value = '';
+    renderGroceryList();
+    updateGroceryStats();
+    saveGroceryToLocalStorage();
+    showToast(`➕ Added "${name}" to Grocery List`);
+
+    try {
+      const res = await fetch('/api/grocery/item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name,
+          quantity: qty,
+          recipe_title: 'Manual / Custom Items'
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.item && data.item.id) {
+          newItem.id = data.item.id;
+          saveGroceryToLocalStorage();
+        }
+      }
+    } catch (err) {
+      console.warn('Server add item error, kept locally:', err);
+    }
+  }
+
+  async function deleteGroceryItem(itemId, event) {
+    if (event) event.stopPropagation();
+    groceryItems = groceryItems.filter(i => i.id !== itemId);
+    renderGroceryList();
+    updateGroceryStats();
+    saveGroceryToLocalStorage();
+
+    try {
+      await fetch('/api/grocery/item/' + encodeURIComponent(itemId), {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.warn('Server delete error, removed locally:', err);
+    }
+  }
+
+  async function clearWholeGroceryList() {
+    if (groceryItems.length === 0) return;
+    if (!confirm('Are you sure you want to clear your entire grocery checklist?')) return;
+
+    groceryItems = [];
+    renderGroceryList();
+    updateGroceryStats();
+    saveGroceryToLocalStorage();
+
+    try {
+      await fetch('/api/grocery/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'all' })
+      });
+      showToast('🗑️ Cleared all items from Grocery List');
+    } catch (err) {
+      console.warn('Server clear error:', err);
+    }
+  }
+
+  async function clearCompletedGroceryItems() {
+    const hasCompleted = groceryItems.some(i => i.checked);
+    if (!hasCompleted) {
+      showToast('No completed items to clear.');
+      return;
+    }
+
+    groceryItems = groceryItems.filter(i => !i.checked);
+    renderGroceryList();
+    updateGroceryStats();
+    saveGroceryToLocalStorage();
+
+    try {
+      await fetch('/api/grocery/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'completed' })
+      });
+      showToast('🧹 Cleared all completed items');
+    } catch (err) {
+      console.warn('Server clear completed error:', err);
+    }
+  }
+
+  function copyGroceryListToClipboard() {
+    if (groceryItems.length === 0) {
+      showToast('Grocery list is empty.');
+      return;
+    }
+
+    const pending = groceryItems.filter(i => !i.checked);
+    const completed = groceryItems.filter(i => i.checked);
+
+    let text = `🛒 Grocery Checklist (${pending.length} to buy):\n\n`;
+
+    if (pending.length > 0) {
+      text += `--- TO BUY ---\n`;
+      pending.forEach(i => {
+        text += `[ ] ${i.name}${i.quantity ? ' - ' + i.quantity : ''}${i.note ? ' (' + i.note + ')' : ''}\n`;
+      });
+    }
+
+    if (completed.length > 0) {
+      text += `\n--- ALREADY CHECKED ---\n`;
+      completed.forEach(i => {
+        text += `[✓] ${i.name}${i.quantity ? ' - ' + i.quantity : ''}\n`;
+      });
+    }
+
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('📋 Copied shopping checklist to clipboard!');
+    }).catch(() => {
+      showToast('⚠️ Could not copy checklist');
+    });
+  }
+
+  // ── Recipe Modal Import Logic ────────────────────────
+  function openImportRecipeModal() {
+    const modal = document.getElementById('recipeImportModal');
+    if (!modal) return;
+
+    if (allSavedRecipes.length === 0) {
+      fetchSavedRecipes().then(() => renderModalRecipeList());
+    } else {
+      renderModalRecipeList();
+    }
+
+    modal.classList.add('active');
+    const searchInput = document.getElementById('modalRecipeSearchInput');
+    if (searchInput) {
+      searchInput.value = '';
+      searchInput.focus();
+    }
+  }
+
+  function closeImportRecipeModal(event) {
+    if (event && event.target !== event.currentTarget && !event.target.classList.contains('btn-close-modal') && event.target.tagName !== 'BUTTON') {
+      return;
+    }
+    const modal = document.getElementById('recipeImportModal');
+    if (modal) modal.classList.remove('active');
+  }
+
+  function filterModalRecipeList() {
+    const q = (document.getElementById('modalRecipeSearchInput').value || '').toLowerCase().trim();
+    renderModalRecipeList(q);
+  }
+
+  function renderModalRecipeList(query = '') {
+    const listEl = document.getElementById('modalRecipeList');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+
+    let list = allSavedRecipes;
+    if (query) {
+      list = list.filter(r => {
+        const name = (r.recipe && r.recipe.recipe_name) ? r.recipe.recipe_name.toLowerCase() : '';
+        const cuisine = (r.recipe && r.recipe.cuisine_type) ? r.recipe.cuisine_type.toLowerCase() : '';
+        const type = (r.recipe && r.recipe.recipe_type) ? r.recipe.recipe_type.toLowerCase() : '';
+        const ings = ((r.recipe && r.recipe.ingredients) || []).map(i => (typeof i === 'string' ? i : i.name)).join(' ').toLowerCase();
+        return name.includes(query) || cuisine.includes(query) || type.includes(query) || ings.includes(query);
+      });
+    }
+
+    const countText = document.getElementById('modalRecipeCountText');
+    if (countText) {
+      countText.textContent = `${list.length} recipe${list.length === 1 ? '' : 's'} available to import`;
+    }
+
+    if (list.length === 0) {
+      listEl.innerHTML = '<p class="empty-state" style="padding:24px; text-align:center; color:var(--text-muted);">No matching recipes found.</p>';
+      return;
+    }
+
+    list.forEach(item => {
+      const r = item.recipe || {};
+      const ings = r.ingredients || [];
+      const title = r.recipe_name || 'Recipe';
+      const category = r.recipe_type || 'Main Course';
+      const thumb = item.thumbnail_url || (ings.length > 0 && ings[0].image ? ings[0].image : '');
+
+      const card = document.createElement('div');
+      card.className = 'modal-recipe-card';
+      card.innerHTML = `
+        <div class="modal-recipe-info">
+          ${thumb ? `<img src="${thumb}" class="modal-recipe-thumb" alt="${escHtml(title)}" loading="lazy" />` : '<div class="modal-recipe-thumb" style="display:flex;align-items:center;justify-content:center;color:#6b7a9e;font-size:18px;">🍲</div>'}
+          <div style="min-width:0;">
+            <div class="modal-recipe-name" title="${escHtml(title)}">${escHtml(title)}</div>
+            <div class="modal-recipe-meta">
+              <span>${escHtml(category)}</span>
+              <span>•</span>
+              <span style="color:var(--accent2); font-weight:600;">🥕 ${ings.length} ingredients</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-recipe-actions">
+          <button class="btn-modal-import" onclick="importRecipeToGrocery('${item.id}', 'append')" title="Add ingredients to existing list">＋ Add</button>
+          <button class="btn-modal-replace" onclick="importRecipeToGrocery('${item.id}', 'replace')" title="Clear current list and load this recipe">🔄 Replace</button>
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+  }
+
+  async function importRecipeToGrocery(recipeId, mode = 'append') {
+    const item = allSavedRecipes.find(r => r.id === recipeId);
+    const rName = item && item.recipe ? item.recipe.recipe_name : 'Recipe';
+
+    try {
+      const res = await fetch('/api/grocery/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipe_id: recipeId,
+          mode: mode
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        groceryItems = data.items || [];
+        saveGroceryToLocalStorage();
+        updateGroceryStats();
+        renderGroceryList();
+        closeImportRecipeModal();
+        showToast(`✅ ${mode === 'replace' ? 'Replaced list with' : 'Added'} ${data.imported_count} ingredients from "${rName}"!`, true);
+      }
+    } catch (err) {
+      console.error('Import error:', err);
+      showToast('⚠️ Could not import recipe ingredients.');
+    }
+  }
+
+  // ── Export from Recipe Page or Card ──────────────────
+  async function exportCurrentRecipeToGrocery() {
+    if (!currentRecipeData || !currentRecipeData.recipe) {
+      showToast('⚠️ No active recipe found to export.');
+      return;
+    }
+
+    const r = currentRecipeData.recipe;
+    const ings = r.ingredients || [];
+    if (ings.length === 0) {
+      showToast('⚠️ This recipe does not list any ingredients.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/grocery/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipe_id: currentRecipeData.id || '',
+          recipe_title: r.recipe_name || 'Recipe',
+          ingredients: ings,
+          mode: 'append'
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        groceryItems = data.items || [];
+        saveGroceryToLocalStorage();
+        updateGroceryStats();
+        showToast(`🛒 Exported ${data.imported_count || ings.length} ingredients from "${r.recipe_name}" to Grocery List!`, true);
+      }
+    } catch (err) {
+      console.error('Export recipe error:', err);
+      showToast('⚠️ Error exporting ingredients.');
+    }
+  }
+
+  async function quickAddRecipeToGrocery(recipeId, event) {
+    if (event) event.stopPropagation();
+    const item = allSavedRecipes.find(r => r.id === recipeId);
+    if (!item) return;
+
+    const r = item.recipe || {};
+    const ings = r.ingredients || [];
+    if (ings.length === 0) {
+      showToast('⚠️ Recipe has no ingredients.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/grocery/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipe_id: recipeId,
+          mode: 'append'
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        groceryItems = data.items || [];
+        saveGroceryToLocalStorage();
+        updateGroceryStats();
+        showToast(`🛒 Exported ${ings.length} ingredients from "${r.recipe_name}"!`, true);
+      }
+    } catch (err) {
+      console.error('Quick add error:', err);
+      showToast('⚠️ Error exporting ingredients.');
+    }
+  }
+
+  function showToast(message, isGrocery = false) {
     let toast = document.getElementById('recipeToast');
     if (!toast) {
       toast = document.createElement('div');
@@ -2869,17 +4148,26 @@
       toast.className = 'recipe-toast';
       document.body.appendChild(toast);
     }
-    toast.innerHTML = `<span>⭐</span><span>${escHtml(message)}</span>`;
+    if (isGrocery) {
+      toast.innerHTML = `
+        <span>🛒</span>
+        <span style="flex:1;">${escHtml(message)}</span>
+        <button onclick="switchMainTab('grocery')" style="background:var(--accent); border:none; color:white; font-family:inherit; font-size:11px; font-weight:700; padding:4px 10px; border-radius:6px; cursor:pointer; margin-left:8px; white-space:nowrap;">Open List ➔</button>
+      `;
+    } else {
+      toast.innerHTML = `<span>⭐</span><span>${escHtml(message)}</span>`;
+    }
     toast.style.display = 'flex';
     clearTimeout(toast._timeout);
     toast._timeout = setTimeout(() => {
       toast.style.display = 'none';
-    }, 2200);
+    }, isGrocery ? 4500 : 2500);
   }
 
   // ── Initial Load ─────────────────────────────────────
   window.addEventListener('DOMContentLoaded', () => {
     fetchSavedRecipes();
+    fetchGroceryList();
   });
 
   // ── Render recipe data ───────────────────────────────
@@ -3170,6 +4458,42 @@
 <div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox()" title="Click anywhere to close">
   <img class="lightbox-img" id="lightboxImg" alt="Enlarged view" onclick="event.stopPropagation()" />
   <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<!-- Recipe Import Modal -->
+<div class="recipe-modal-backdrop" id="recipeImportModal" onclick="closeImportRecipeModal(event)">
+  <div class="recipe-modal-content" onclick="event.stopPropagation()">
+    <div class="recipe-modal-header">
+      <div class="recipe-modal-title-wrap">
+        <span class="recipe-modal-icon">📥</span>
+        <div>
+          <h3 class="recipe-modal-title">Import Recipe to Grocery List</h3>
+          <p class="recipe-modal-sub">Choose any recipe to extract all its ingredients into your checklist.</p>
+        </div>
+      </div>
+      <button class="btn-close-modal" onclick="closeImportRecipeModal()" title="Close dialog">✕</button>
+    </div>
+
+    <div class="recipe-modal-search-wrap">
+      <input
+        type="text"
+        id="modalRecipeSearchInput"
+        class="grocery-input"
+        style="padding-left:14px;"
+        placeholder="Search recipes by title, cuisine, ingredients..."
+        oninput="filterModalRecipeList()"
+      />
+    </div>
+
+    <div class="recipe-modal-list" id="modalRecipeList">
+      <!-- Dynamic recipe list items -->
+    </div>
+
+    <div class="recipe-modal-footer">
+      <span class="recipe-modal-sub" id="modalRecipeCountText">Loading recipes...</span>
+      <button class="btn-grocery-tool" onclick="closeImportRecipeModal()">Close</button>
+    </div>
+  </div>
 </div>
 
 </body>

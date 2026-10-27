@@ -10,6 +10,7 @@ __pycache__/
 *.wav
 *.json
 !data/recipes.json
+!data/grocery.json
 !docs/**
 !docs/recipes.json
 *.vtt

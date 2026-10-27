@@ -54,7 +54,8 @@ personal-ai/
 ├── context.md             # Living architecture & technical context documentation
 ├── handoff.md             # Migration & setup guide across environments
 ├── data/
-│   └── recipes.json       # Canonical database of 73 extracted culinary recipes with visual snapshots
+│   ├── recipes.json       # Canonical database of 73 extracted culinary recipes with visual snapshots
+│   └── grocery.json       # Persistent grocery checklist with item states, quantities, recipe origins, and timestamps
 ├── docs/                  # GitHub Pages root folder (branch: main, path: /docs)
 │   ├── index.html         # Standalone, interactive, mobile-responsive public cookbook (73 recipes)
 │   └── recipes.json       # Raw static JSON feed
@@ -126,6 +127,14 @@ personal-ai/
     - Implemented smart comment parsing in `server.py` and `recipe_agent.py` that prioritizes comments made by the creator (`uploader`, `channel`), pinned comments, and comments containing ingredient measurements.
     - Re-architected Gemini multimodal prompting so the model receives BOTH the full video file and the complete text payload (title, creator, caption, structured comments, and audio transcript), cross-referencing visual timestamps with written ingredients.
     - Added an optional expandable "Add Pinned Comment / Recipe Notes" input to the web interface (`static/index.html`) and `/api/extract` REST endpoint.
+
+13. **Persistent Grocery & Shopping Checklist with Memory (`data/grocery.json`, `server.py`, `static/index.html`)**:
+    - Created a 3rd main navigation tab (`🛒 Grocery / To-Do`) with dynamic unchecked item count badge, progress bar, and category/completion filters.
+    - **Persistent State Across Server Restarts**: Integrated atomic disk storage in `data/grocery.json` via dedicated REST endpoints (`GET /api/grocery`, `POST /api/grocery/item`, `PATCH /api/grocery/item/<id>`, `DELETE /api/grocery/item/<id>`, `POST /api/grocery/import`, `POST /api/grocery/clear`). Checking or unchecking an item writes immediately to disk, so state survives server restarts and crashes.
+    - **1-Click Recipe Export**: Added "Export to Grocery List" buttons in both the recipe detail header and ingredients card, plus a quick `🛒` button on every saved recipe card.
+    - **Interactive Import Modal**: Built an in-tab recipe picker modal allowing users to search saved recipes and choose between appending ingredients or replacing the whole list.
+    - **Manual Item Add**: Fast input bar for custom household items (e.g. Milk, Eggs, Olive Oil) with name, quantity/notes, and Enter key support.
+    - **List Management Tools**: Quick buttons for "Clear Whole List", "Clear Checked", and "Copy List" (formatted for WhatsApp/Notes sharing).
 
 ---
 
